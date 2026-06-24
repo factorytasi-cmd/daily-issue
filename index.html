@@ -303,14 +303,6 @@
       <label>Google Apps Script URL</label>
       <input type="text" id="cfg-gasurl" placeholder="https://script.google.com/macros/s/..." />
     </div>
-    <div class="config-row">
-      <label>Nama Operator</label>
-      <input type="text" id="cfg-operator" placeholder="Nama lengkap operator..." />
-    </div>
-    <div class="config-row">
-      <label>SPO (Nomor Kode Produksi)</label>
-      <input type="text" id="cfg-spo" placeholder="Nomor SPO..." />
-    </div>
     <p style="font-size:11px;color:#aaa;margin-top:6px">Isi sekali, tersimpan di perangkat ini.</p>
   </div>
 
@@ -368,17 +360,11 @@ const GASURL_KEY = 'dip_gasurl';
 window.onload = () => {
   const ak = localStorage.getItem(APIKEY_KEY);
   const gu = localStorage.getItem(GASURL_KEY);
-  const op = localStorage.getItem('dip_operator');
-  const sp = localStorage.getItem('dip_spo');
   if (ak) document.getElementById('cfg-apikey').value = ak;
   if (gu) document.getElementById('cfg-gasurl').value = gu;
-  if (op) document.getElementById('cfg-operator').value = op;
-  if (sp) document.getElementById('cfg-spo').value = sp;
 
   document.getElementById('cfg-apikey').addEventListener('change', e => localStorage.setItem(APIKEY_KEY, e.target.value.trim()));
   document.getElementById('cfg-gasurl').addEventListener('change', e => localStorage.setItem(GASURL_KEY, e.target.value.trim()));
-  document.getElementById('cfg-operator').addEventListener('change', e => localStorage.setItem('dip_operator', e.target.value.trim()));
-  document.getElementById('cfg-spo').addEventListener('change', e => localStorage.setItem('dip_spo', e.target.value.trim()));
 };
 
 // ======= RECORD =======
@@ -488,8 +474,6 @@ function startSpeechRecognition() {}
 async function parseWithAI() {
   const apiKey = document.getElementById('cfg-apikey').value.trim();
   const transkrip = document.getElementById('transkrip').value.trim();
-  const operator = document.getElementById('cfg-operator').value.trim() || '-';
-  const spo = document.getElementById('cfg-spo').value.trim() || '-';
 
   if (!apiKey) { showToast('Isi API Key dulu di Konfigurasi', 'error'); return; }
   if (!transkrip) { showToast('Transkripsi kosong', 'error'); return; }
@@ -499,7 +483,7 @@ async function parseWithAI() {
 
   const today = new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'2-digit', year:'numeric' });
 
-  const prompt = `Kamu adalah sistem ekstraksi data untuk laporan produksi pabrik.
+  const prompt = `Kamu adalah sistem ekstraksi data untuk laporan produksi pabrik sepatu/garmen.
 
 Dari transkripsi audio berikut, ekstrak data dan kembalikan HANYA JSON array (tanpa penjelasan, tanpa markdown).
 
@@ -509,8 +493,10 @@ Aturan:
 - Kategori: tentukan sendiri berdasarkan isi issue (contoh: Material Defect, Sewing Defect, Cutting Error, Machine Down, Material Shortage, Quality Issue, dll)
 - Jika ada field yang tidak disebutkan, isi dengan "-"
 - qty harus angka saja (tanpa satuan)
-- operator: "${operator}"
-- spo: "${spo}"
+- "pic" adalah nama leader/supervisor yang melapor (biasanya disebut di awal)
+- "operator" adalah nama operator yang mengerjakan (biasanya disebut di akhir, setelah kata "oleh operator")
+- "spo" adalah nomor kode produksi (biasanya disebut setelah kata "SPO")
+- "divisi" adalah divisi/bagian produksi yang disebutkan
 
 Format JSON:
 [
@@ -523,8 +509,8 @@ Format JSON:
     "size": "...",
     "qty": "...",
     "kategori": "...",
-    "operator": "${operator}",
-    "spo": "${spo}"
+    "operator": "...",
+    "spo": "..."
   }
 ]
 
