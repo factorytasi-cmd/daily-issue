@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Daily Issue Produksi</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #F5F5F0;
+    color: #1A1A1A;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    background: #1A1A2E;
+    color: #fff;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .topbar-icon {
+    width: 32px;
+    height: 32px;
+    background: #E94560;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .topbar h1 { font-size: 15px; font-weight: 600; letter-spacing: 0.01em; }
+  .topbar p { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 1px; }
+
+  .container { padding: 16px; max-width: 480px; margin: 0 auto; }
+
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border: 1px solid #E8E8E4;
+  }
+
+  .card-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 12px;
+  }
+
+  /* Config section */
+  .config-row { margin-bottom: 10px; }
+  .config-row label { font-size: 12px; color: #666; display: block; margin-bottom: 4px; }
+  .config-row input {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid #E0E0DC;
+    border-radius: 8px;
+    font-size: 13px;
+    background: #FAFAF8;
+    color: #1A1A1A;
+  }
+  .config-row input:focus { outline: none; border-color: #E94560; }
+
+  /* Record area */
+  .rec-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 0 4px;
+    gap: 12px;
+  }
+
+  .rec-ring {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.1s;
+    border: none;
+    background: #FEE8EC;
+    position: relative;
+  }
+
+  .rec-ring.recording {
+    background: #E94560;
+    animation: recpulse 1.4s infinite;
+  }
+
+  .rec-ring.done { background: #E8F5E9; }
+  .rec-ring:active { transform: scale(0.95); }
+
+  @keyframes recpulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(233,69,96,0.4); }
+    50% { box-shadow: 0 0 0 14px rgba(233,69,96,0); }
+  }
+
+  .rec-icon { font-size: 32px; }
+  .rec-timer { font-size: 28px; font-weight: 300; letter-spacing: 0.05em; color: #1A1A1A; font-variant-numeric: tabular-nums; }
+  .rec-status { font-size: 13px; color: #888; }
+
+  .wave {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 32px;
+  }
+
+  .wave-bar {
+    width: 3px;
+    border-radius: 2px;
+    background: #E94560;
+    height: 4px;
+    transition: height 0.07s;
+  }
+
+  /* Transcript */
+  .transkrip-box {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px 12px;
+    border: 1px solid #E0E0DC;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.6;
+    background: #FAFAF8;
+    color: #1A1A1A;
+    resize: none;
+    font-family: inherit;
+  }
+  .transkrip-box:focus { outline: none; border-color: #E94560; }
+
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #888;
+    min-height: 24px;
+    margin-top: 8px;
+  }
+
+  .dot-anim {
+    display: inline-flex;
+    gap: 3px;
+  }
+  .dot-anim span {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #E94560;
+    display: inline-block;
+    animation: dotbounce 0.9s infinite;
+  }
+  .dot-anim span:nth-child(2) { animation-delay: 0.15s; }
+  .dot-anim span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes dotbounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+
+  /* Preview table */
+  .preview-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid #E8E8E4; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 500px; }
+  th {
+    background: #F5F5F0;
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 600;
+    color: #666;
+    white-space: nowrap;
+    border-bottom: 1px solid #E8E8E4;
+  }
+  td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #F0F0EC;
+    color: #1A1A1A;
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+
+  .badge-kategori {
+    background: #FEE8EC;
+    color: #C0293F;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  /* Buttons */
+  .btn-row { display: flex; gap: 8px; margin-top: 4px; }
+
+  .btn {
+    flex: 1;
+    padding: 11px 0;
+    border-radius: 10px;
+    border: 1px solid #E0E0DC;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    background: #fff;
+    color: #1A1A1A;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background 0.15s;
+  }
+  .btn:hover { background: #F5F5F0; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-primary {
+    background: #E94560;
+    color: #fff;
+    border-color: #E94560;
+  }
+  .btn-primary:hover { background: #C0293F; }
+
+  .btn-success {
+    background: #1A1A2E;
+    color: #fff;
+    border-color: #1A1A2E;
+  }
+  .btn-success:hover { background: #0D0D1A; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: #1A1A2E;
+    color: #fff;
+    font-size: 13px;
+    padding: 10px 20px;
+    border-radius: 30px;
+    opacity: 0;
+    transition: opacity 0.25s, transform 0.25s;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 99;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.error { background: #C0293F; }
+  .toast.success { background: #2E7D32; }
+
+  .empty-preview {
+    text-align: center;
+    padding: 20px;
+    color: #aaa;
+    font-size: 13px;
+  }
+
+  audio { width: 100%; margin-top: 10px; border-radius: 8px; }
+
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 12px;
+  }
+  .section-divider span { font-size: 11px; color: #aaa; white-space: nowrap; }
+  .section-divider::before, .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #E8E8E4;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-icon">🏭</div>
+  <div>
+    <h1>Daily Issue Produksi</h1>
+    <p>Rekam → AI parsing → Google Sheet</p>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- KONFIGURASI -->
+  <div class="card">
+    <div class="card-label">⚙️ Konfigurasi</div>
+    <div class="config-row">
+      <label>Anthropic API Key</label>
+      <input type="password" id="cfg-apikey" placeholder="sk-ant-api03-..." />
+    </div>
+    <div class="config-row">
+      <label>Google Apps Script URL</label>
+      <input type="text" id="cfg-gasurl" placeholder="https://script.google.com/macros/s/..." />
+    </div>
+    <p style="font-size:11px;color:#aaa;margin-top:6px">Isi sekali, tersimpan di perangkat ini.</p>
+  </div>
+
+  <!-- REKAM -->
+  <div class="card">
+    <div class="card-label">🎙️ Rekam Audio</div>
+    <div class="rec-center">
+      <div class="wave" id="wave">
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+      </div>
+      <div class="rec-timer" id="timer">00:00</div>
+      <button class="rec-ring" id="rec-btn" onclick="toggleRecord()">
+        <span class="rec-icon" id="rec-icon">🎙️</span>
+      </button>
+      <div class="rec-status" id="rec-status">Tekan untuk mulai merekam</div>
+    </div>
+    <audio id="audio-player" controls style="display:none"></audio>
+
+    <div class="section-divider"><span>Transkripsi</span></div>
+
+    <textarea class="transkrip-box" id="transkrip" placeholder='Hasil transkripsi muncul di sini setelah merekam. Contoh: "Saya Lukman dari divisi cutting kulit, ada masalah style XXX321, size S 12 pcs size M 8 pcs, material menguning dari gudang"'></textarea>
+
+    <div class="status-bar" id="status-bar"></div>
+
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn" onclick="clearAll()">🗑️ Bersihkan</button>
+      <button class="btn btn-primary" onclick="parseWithAI()" id="btn-parse">🤖 Parsing AI</button>
+    </div>
+  </div>
+
+  <!-- PREVIEW HASIL -->
+  <div class="card">
+    <div class="card-label">📋 Preview Data</div>
+    <div id="preview-area">
+      <div class="empty-preview">Belum ada data. Rekam dan parsing terlebih dahulu.</div>
+    </div>
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn btn-success" onclick="kirimKeSheet()" id="btn-kirim" disabled>📤 Kirim ke Google Sheet</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ======= CONFIG =======
+const APIKEY_KEY = 'dip_apikey';
+const GASURL_KEY = 'dip_gasurl';
+
+window.onload = () => {
+  const ak = localStorage.getItem(APIKEY_KEY);
+  const gu = localStorage.getItem(GASURL_KEY);
+  if (ak) document.getElementById('cfg-apikey').value = ak;
+  if (gu) document.getElementById('cfg-gasurl').value = gu;
+
+  document.getElementById('cfg-apikey').addEventListener('change', e => localStorage.setItem(APIKEY_KEY, e.target.value.trim()));
+  document.getElementById('cfg-gasurl').addEventListener('change', e => localStorage.setItem(GASURL_KEY, e.target.value.trim()));
+};
+
+// ======= RECORD =======
+let mediaRec = null, chunks = [], recInterval = null, recSecs = 0, isRec = false;
+let waveInterval = null;
+let parsedRows = [];
+
+const bars = document.querySelectorAll('.wave-bar');
+
+function animWave(on) {
+  clearInterval(waveInterval);
+  if (on) {
+    waveInterval = setInterval(() => {
+      bars.forEach(b => b.style.height = (4 + Math.random() * 28) + 'px');
+    }, 80);
+  } else {
+    bars.forEach((b, i) => {
+      const h = [4,8,14,20,26,22,16,10,6,10,18,24,18,12,6];
+      b.style.height = (h[i] || 6) + 'px';
+    });
+  }
+}
+
+function fmt2(n) { return String(n).padStart(2,'0'); }
+function fmtTime(s) { return fmt2(Math.floor(s/60)) + ':' + fmt2(s % 60); }
+
+async function toggleRecord() {
+  if (!isRec) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      chunks = []; recSecs = 0;
+      mediaRec = new MediaRecorder(stream);
+      mediaRec.ondataavailable = e => chunks.push(e.data);
+      mediaRec.onstop = () => {
+        stream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        const url = URL.createObjectURL(blob);
+        const ap = document.getElementById('audio-player');
+        ap.src = url; ap.style.display = 'block';
+        document.getElementById('rec-btn').className = 'rec-ring done';
+        document.getElementById('rec-icon').textContent = '✅';
+        document.getElementById('rec-status').textContent = 'Rekaman selesai. Dengarkan atau lanjut parsing.';
+        animWave(false);
+        startSpeechRecognition(blob);
+      };
+      mediaRec.start(); isRec = true;
+      document.getElementById('rec-btn').className = 'rec-ring recording';
+      document.getElementById('rec-icon').textContent = '⏹️';
+      document.getElementById('rec-status').textContent = 'Sedang merekam… tekan lagi untuk berhenti';
+      animWave(true);
+      recInterval = setInterval(() => {
+        recSecs++;
+        document.getElementById('timer').textContent = fmtTime(recSecs);
+      }, 1000);
+
+      // Start speech recognition simultaneously
+      startLiveSpeech();
+
+    } catch(e) {
+      showToast('Izin mikrofon ditolak', 'error');
+    }
+  } else {
+    mediaRec.stop(); isRec = false;
+    clearInterval(recInterval);
+    stopLiveSpeech();
+  }
+}
+
+// ======= SPEECH RECOGNITION =======
+let recognition = null;
+let liveText = '';
+
+function startLiveSpeech() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    setStatus('Web Speech API tidak didukung browser ini. Ketik transkripsi manual.');
+    return;
+  }
+  recognition = new SpeechRecognition();
+  recognition.lang = 'id-ID';
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  liveText = '';
+
+  recognition.onresult = e => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) liveText += e.results[i][0].transcript + ' ';
+      else interim += e.results[i][0].transcript;
+    }
+    document.getElementById('transkrip').value = liveText + interim;
+  };
+
+  recognition.onerror = () => {};
+  recognition.start();
+  setStatus('🔴 Merekam dan mentranskripsi…');
+}
+
+function stopLiveSpeech() {
+  if (recognition) { try { recognition.stop(); } catch(e){} }
+  setStatus('Transkripsi selesai. Periksa teks, lalu tekan Parsing AI.');
+}
+
+function startSpeechRecognition() {}
+
+// ======= AI PARSING =======
+async function parseWithAI() {
+  const apiKey = document.getElementById('cfg-apikey').value.trim();
+  const transkrip = document.getElementById('transkrip').value.trim();
+
+  if (!apiKey) { showToast('Isi API Key dulu di Konfigurasi', 'error'); return; }
+  if (!transkrip) { showToast('Transkripsi kosong', 'error'); return; }
+
+  document.getElementById('btn-parse').disabled = true;
+  setStatus('<span class="dot-anim"><span></span><span></span><span></span></span> AI sedang menganalisis…', true);
+
+  const today = new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'2-digit', year:'numeric' });
+
+  const prompt = `Kamu adalah sistem ekstraksi data untuk laporan produksi pabrik.
+
+Dari transkripsi audio berikut, ekstrak data dan kembalikan HANYA JSON array (tanpa penjelasan, tanpa markdown).
+
+Aturan:
+- Jika ada beberapa size, buat SATU objek per size
+- Tanggal hari ini: ${today}
+- Kategori: tentukan sendiri berdasarkan isi issue (contoh: Material Defect, Sewing Defect, Cutting Error, Machine Down, Material Shortage, Quality Issue, dll)
+- Jika ada field yang tidak disebutkan, isi dengan "-"
+- qty harus angka saja (tanpa satuan)
+
+Format JSON:
+[
+  {
+    "tanggal": "...",
+    "divisi": "...",
+    "pic": "...",
+    "style": "...",
+    "issue": "...",
+    "size": "...",
+    "qty": "...",
+    "kategori": "..."
+  }
+]
+
+Transkripsi:
+"${transkrip}"`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+
+    const text = data.content[0].text.trim();
+    const clean = text.replace(/```json|```/g, '').trim();
+    parsedRows = JSON.parse(clean);
+
+    renderPreview(parsedRows);
+    document.getElementById('btn-kirim').disabled = false;
+    setStatus('✅ Parsing berhasil! Periksa data di bawah, lalu kirim ke Sheet.');
+    showToast('Parsing berhasil!', 'success');
+
+  } catch(e) {
+    setStatus('❌ Gagal parsing: ' + e.message);
+    showToast('Gagal parsing AI', 'error');
+  }
+
+  document.getElementById('btn-parse').disabled = false;
+}
+
+// ======= RENDER PREVIEW =======
+function renderPreview(rows) {
+  if (!rows.length) return;
+
+  let html = '<div class="preview-wrap"><table><thead><tr>';
+  const cols = ['Tanggal','Divisi','PIC','Style','Issue','Size','Qty','Kategori'];
+  cols.forEach(c => html += `<th>${c}</th>`);
+  html += '</tr></thead><tbody>';
+
+  rows.forEach(r => {
+    html += `<tr>
+      <td>${r.tanggal}</td>
+      <td>${r.divisi}</td>
+      <td>${r.pic}</td>
+      <td>${r.style}</td>
+      <td>${r.issue}</td>
+      <td>${r.size}</td>
+      <td>${r.qty}</td>
+      <td><span class="badge-kategori">${r.kategori}</span></td>
+    </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+  document.getElementById('preview-area').innerHTML = html;
+}
+
+// ======= KIRIM KE SHEET =======
+async function kirimKeSheet() {
+  const gasUrl = document.getElementById('cfg-gasurl').value.trim();
+  if (!gasUrl) { showToast('Isi Google Apps Script URL dulu', 'error'); return; }
+  if (!parsedRows.length) { showToast('Tidak ada data untuk dikirim', 'error'); return; }
+
+  document.getElementById('btn-kirim').disabled = true;
+  setStatus('<span class="dot-anim"><span></span><span></span><span></span></span> Mengirim ke Google Sheet…', true);
+
+  try {
+    await fetch(gasUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rows: parsedRows })
+    });
+
+    setStatus('✅ Data berhasil dikirim ke Google Sheet!');
+    showToast('Berhasil masuk ke Sheet!', 'success');
+    parsedRows = [];
+    setTimeout(() => clearAll(), 3000);
+
+  } catch(e) {
+    setStatus('❌ Gagal kirim: ' + e.message);
+    showToast('Gagal kirim ke Sheet', 'error');
+    document.getElementById('btn-kirim').disabled = false;
+  }
+}
+
+// ======= UTILS =======
+function clearAll() {
+  document.getElementById('transkrip').value = '';
+  document.getElementById('timer').textContent = '00:00';
+  document.getElementById('rec-btn').className = 'rec-ring';
+  document.getElementById('rec-icon').textContent = '🎙️';
+  document.getElementById('rec-status').textContent = 'Tekan untuk mulai merekam';
+  document.getElementById('audio-player').style.display = 'none';
+  document.getElementById('audio-player').src = '';
+  document.getElementById('preview-area').innerHTML = '<div class="empty-preview">Belum ada data. Rekam dan parsing terlebih dahulu.</div>';
+  document.getElementById('btn-kirim').disabled = true;
+  setStatus('');
+  animWave(false);
+  recSecs = 0;
+  parsedRows = [];
+}
+
+function setStatus(msg, raw = false) {
+  const el = document.getElementById('status-bar');
+  if (raw) el.innerHTML = msg;
+  else el.textContent = msg;
+}
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  setTimeout(() => t.className = 'toast', 2800);
+}
+</script>
+</body>
+</html>
