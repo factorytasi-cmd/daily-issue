@@ -200,14 +200,47 @@ const MASTER_GAS_URL = 'https://script.google.com/macros/s/AKfycbyFtdZGKa-oADnbI
 
 async function loadMasterList() {
   try {
-    const res = await fetch(MASTER_GAS_URL);
-    const json = await res.json();
-    if (json.error) throw new Error(json.error);
-    masterStyles = json.styles || [];
-    masterSPOs   = json.spos   || [];
+    // Pakai JSONP untuk bypass CORS
+    const data = await new Promise((resolve, reject) => {
+      const callbackName = 'masterListCallback_' + Date.now();
+      const script = document.createElement('script');
+      const timeout = setTimeout(() => {
+        delete window[callbackName];
+        document.body.removeChild(script);
+        reject(new Error('Timeout'));
+      }, 10000);
+
+      window[callbackName] = (data) => {
+        clearTimeout(timeout);
+        delete window[callbackName];
+        document.body.removeChild(script);
+        resolve(data);
+      };
+
+      script.src = MASTER_GAS_URL + '?callback=' + callbackName;
+      script.onerror = () => {
+        clearTimeout(timeout);
+        delete window[callbackName];
+        reject(new Error('Script load error'));
+      };
+      document.body.appendChild(script);
+    });
+
+    masterStyles = data.styles || [];
+    masterSPOs   = data.spos   || [];
     setStatus(`✅ Master list: ${masterStyles.length} style, ${masterSPOs.length} SPO`);
   } catch(e) {
-    setStatus('⚠️ Gagal load master list: ' + e.message);
+    // Fallback: fetch biasa dengan mode no-cors tidak bisa baca response
+    // Coba fetch langsung - kadang GAS sudah handle CORS
+    try {
+      const res = await fetch(MASTER_GAS_URL + '?t=' + Date.now());
+      const json = await res.json();
+      masterStyles = json.styles || [];
+      masterSPOs   = json.spos   || [];
+      setStatus(`✅ Master list: ${masterStyles.length} style, ${masterSPOs.length} SPO`);
+    } catch(e2) {
+      setStatus('⚠️ Gagal load master list. Coba refresh halaman.');
+    }
   }
 }
 
