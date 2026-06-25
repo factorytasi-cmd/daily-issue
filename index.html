@@ -315,20 +315,38 @@ function similarityStyle(a, b) {
 }
 
 function similaritySPO(a, b) {
-  // User ucapkan angka saja misal "2023/26", master list "S2023/26"
-  // Ekstrak hanya angka dan slash
+  // Ekstrak angka sebelum "/" sebagai nomor utama
   const numA = a.replace(/[^0-9\/]/g, '').trim();
   const numB = b.replace(/[^0-9\/]/g, '').trim();
   if (numA.length === 0 || numB.length === 0) return 0;
+
+  // Match sempurna
   if (numA === numB) return 1;
   if (numB.includes(numA) || numA.includes(numB)) return 0.95;
-  // Cek tahun (bagian setelah /)
-  const yearA = a.split('/')[1]?.trim();
-  const yearB = b.split('/')[1]?.trim();
-  const numOnlyA = a.split('/')[0]?.replace(/[^0-9]/g,'');
-  const numOnlyB = b.split('/')[0]?.replace(/[^0-9]/g,'');
-  if (yearA && yearB && yearA === yearB && numOnlyA && numOnlyB && numOnlyA === numOnlyB) return 0.98;
-  if (yearA && yearB && yearA === yearB) return 0.5;
+
+  // Pisah nomor dan tahun
+  const partsA = numA.split('/');
+  const partsB = numB.split('/');
+  const noA = parseInt(partsA[0]) || 0;
+  const noB = parseInt(partsB[0]) || 0;
+  const yrA = partsA[1] || '';
+  const yrB = partsB[1] || '';
+
+  // Tahun sama - hitung kedekatan nomor secara numerik
+  if (yrA && yrB && yrA === yrB) {
+    const diff = Math.abs(noA - noB);
+    if (diff === 0) return 0.98;
+    if (diff <= 10) return 0.8 - (diff * 0.02);   // makin dekat makin tinggi
+    if (diff <= 50) return 0.5 - (diff * 0.005);
+    return 0.2;
+  }
+
+  // Nomor sama tapi tahun beda
+  if (noA === noB) return 0.6;
+
+  // Fallback: kedekatan numerik saja
+  const diff = Math.abs(noA - noB);
+  if (diff <= 10) return 0.3 - (diff * 0.01);
   return 0;
 }
 
