@@ -198,16 +198,23 @@ window.onload = async () => {
 // ======= LOAD MASTER LIST =======
 async function loadMasterList() {
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${MASTER_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(MASTER_SHEET_NAME)}`;
+    const url = `https://docs.google.com/spreadsheets/d/${MASTER_SHEET_ID}/export?format=csv&sheet=${encodeURIComponent(MASTER_SHEET_NAME)}`;
     const res = await fetch(url);
+    if (!res.ok) throw new Error('Gagal fetch CSV');
     const text = await res.text();
-    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
-    const rows = json.table.rows;
-    masterStyles = rows.map(r => r.c[0]?.v).filter(Boolean);
-    masterSPOs = rows.map(r => r.c[1]?.v).filter(Boolean).map(String);
+    const rows = text.trim().split('\n').slice(1); // skip header row
+    masterStyles = [];
+    masterSPOs = [];
+    rows.forEach(row => {
+      const cols = row.split(',');
+      const style = cols[0]?.replace(/^"|"$/g,'').trim();
+      const spo = cols[1]?.replace(/^"|"$/g,'').trim();
+      if (style) masterStyles.push(style);
+      if (spo) masterSPOs.push(spo);
+    });
     setStatus(`✅ Master list loaded: ${masterStyles.length} style, ${masterSPOs.length} SPO`);
   } catch(e) {
-    setStatus('⚠️ Gagal load master list. Cek koneksi atau akses sheet.');
+    setStatus('⚠️ Gagal load master list: ' + e.message);
   }
 }
 
