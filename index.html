@@ -196,51 +196,36 @@ window.onload = async () => {
 };
 
 // ======= LOAD MASTER LIST =======
-const MASTER_GAS_URL = 'https://script.google.com/macros/s/AKfycbyFtdZGKa-oADnbIJEESQVdUPDWoblTbYY-YWYBr-YSW0al30uj-Y9RZLB_5WApYB-8/exec';
-
 async function loadMasterList() {
+  const gasUrl = localStorage.getItem('dip_gasurl');
+  if (!gasUrl) {
+    setStatus('⚠️ Isi Google Apps Script URL di Konfigurasi dulu.');
+    return;
+  }
   try {
-    // Pakai JSONP untuk bypass CORS
     const data = await new Promise((resolve, reject) => {
-      const callbackName = 'masterListCallback_' + Date.now();
+      const callbackName = 'cb_' + Date.now();
       const script = document.createElement('script');
-      const timeout = setTimeout(() => {
+      const timer = setTimeout(() => {
         delete window[callbackName];
-        document.body.removeChild(script);
+        if (script.parentNode) script.parentNode.removeChild(script);
         reject(new Error('Timeout'));
-      }, 10000);
-
-      window[callbackName] = (data) => {
-        clearTimeout(timeout);
+      }, 15000);
+      window[callbackName] = (d) => {
+        clearTimeout(timer);
         delete window[callbackName];
-        document.body.removeChild(script);
-        resolve(data);
+        if (script.parentNode) script.parentNode.removeChild(script);
+        resolve(d);
       };
-
-      script.src = MASTER_GAS_URL + '?callback=' + callbackName;
-      script.onerror = () => {
-        clearTimeout(timeout);
-        delete window[callbackName];
-        reject(new Error('Script load error'));
-      };
+      script.src = gasUrl + '?callback=' + callbackName + '&t=' + Date.now();
+      script.onerror = () => { clearTimeout(timer); reject(new Error('Load error')); };
       document.body.appendChild(script);
     });
-
     masterStyles = data.styles || [];
     masterSPOs   = data.spos   || [];
     setStatus(`✅ Master list: ${masterStyles.length} style, ${masterSPOs.length} SPO`);
   } catch(e) {
-    // Fallback: fetch biasa dengan mode no-cors tidak bisa baca response
-    // Coba fetch langsung - kadang GAS sudah handle CORS
-    try {
-      const res = await fetch(MASTER_GAS_URL + '?t=' + Date.now());
-      const json = await res.json();
-      masterStyles = json.styles || [];
-      masterSPOs   = json.spos   || [];
-      setStatus(`✅ Master list: ${masterStyles.length} style, ${masterSPOs.length} SPO`);
-    } catch(e2) {
-      setStatus('⚠️ Gagal load master list. Coba refresh halaman.');
-    }
+    setStatus('⚠️ Gagal load master list: ' + e.message);
   }
 }
 
