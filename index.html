@@ -197,31 +197,54 @@ window.onload = async () => {
 
 // ======= LOAD MASTER LIST =======
 async function loadMasterList() {
+  // Gunakan Google Sheets API v4 public JSON - tidak ada limit baris
+  const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${MASTER_SHEET_ID}/values/${encodeURIComponent(MASTER_SHEET_NAME)}!A:B?key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY`;
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${MASTER_SHEET_ID}/export?format=csv&sheet=${encodeURIComponent(MASTER_SHEET_NAME)}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Gagal fetch');
-    const text = await res.text();
-    masterStyles = []; masterSPOs = [];
-    const lines = text.trim().split('\n');
-    const startIdx = (lines[0].toLowerCase().includes('style') || lines[0].toLowerCase().includes('spo')) ? 1 : 0;
-    lines.slice(startIdx).forEach(line => {
-      const cols = [];
-      let cur = '', inQ = false;
-      for (let c of line) {
-        if (c === '"') inQ = !inQ;
-        else if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
-        else cur += c;
-      }
-      cols.push(cur.trim());
-      const style = cols[0]?.replace(/^"|"$/g,'').trim();
-      const spo = cols[1]?.replace(/^"|"$/g,'').trim();
+    const res = await fetch(apiUrl);
+    const json = await res.json();
+    const rows = json.values || [];
+    masterStyles = [];
+    masterSPOs = [];
+    // Skip header row jika ada
+    const startIdx = (rows[0]?.[0]?.toLowerCase().includes('style') || rows[0]?.[1]?.toLowerCase().includes('spo')) ? 1 : 0;
+    rows.slice(startIdx).forEach(r => {
+      const style = r[0]?.toString().trim();
+      const spo = r[1]?.toString().trim();
       if (style && style.length > 0) masterStyles.push(style);
       if (spo && spo.length > 0) masterSPOs.push(spo);
     });
-    setStatus(`✅ Master list: ${masterStyles.length} style, ${masterSPOs.length} SPO`);
-  } catch(e) {
-    setStatus('⚠️ Gagal load master list: ' + e.message);
+    if (masterStyles.length > 0 || masterSPOs.length > 0) {
+      setStatus(`✅ Master list: ${masterStyles.length} style, ${masterSPOs.length} SPO`);
+      return;
+    }
+    throw new Error('Data kosong, coba fallback');
+  } catch(e1) {
+    // Fallback: gviz tanpa limit
+    try {
+      const gvizUrl = `https://docs.google.com/spreadsheets/d/${MASTER_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(MASTER_SHEET_NAME)}`;
+      const res2 = await fetch(gvizUrl);
+      const text = await res2.text();
+      masterStyles = []; masterSPOs = [];
+      const lines = text.trim().split('\n');
+      const startIdx = (lines[0].toLowerCase().includes('style')) ? 1 : 0;
+      lines.slice(startIdx).forEach(line => {
+        const cols = [];
+        let cur = '', inQ = false;
+        for (let c of line) {
+          if (c === '"') inQ = !inQ;
+          else if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+          else cur += c;
+        }
+        cols.push(cur.trim());
+        const style = cols[0]?.replace(/^"|"$/g,'').trim();
+        const spo = cols[1]?.replace(/^"|"$/g,'').trim();
+        if (style && style.length > 0) masterStyles.push(style);
+        if (spo && spo.length > 0) masterSPOs.push(spo);
+      });
+      setStatus(`✅ Master list: ${masterStyles.length} style, ${masterSPOs.length} SPO`);
+    } catch(e2) {
+      setStatus('⚠️ Gagal load master list. Pastikan sheet sudah public.');
+    }
   }
 }
 
@@ -351,7 +374,7 @@ Aturan:
 - "pic" adalah nama leader/supervisor yang melapor (biasanya disebut di awal)
 - "operator" adalah nama operator (biasanya setelah kata "oleh operator")
 - "spo" adalah nomor kode produksi (biasanya setelah kata "SPO") - tulis apa adanya dari transkripsi
-- "style" adalah nama produk/style yang diproduksi (BUKAN nama divisi, line, atau kode lain). Tulis apa adanya dari transkripsi. Contoh: "Tour Authentic 2025", "Stablegrip Natural Fit 2016"
+- "style" adalah nama produk sepatu/garmen yang diproduksi. PERHATIAN: kode seperti "F04", "F08", "F12", "line F04" BUKAN style - itu adalah nama line/divisi. Style biasanya berupa nama produk lengkap seperti "Stablegrip Natural Fit 2016", "Tour Authentic 2025", "Adidas Ultraboost". Tulis apa adanya dari transkripsi.
 - "divisi" adalah divisi/bagian produksi
 
 Format JSON:
