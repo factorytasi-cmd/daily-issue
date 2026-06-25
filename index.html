@@ -302,18 +302,11 @@ function stopLiveSpeech() {
 }
 
 // ======= SIMILARITY (fuzzy match) =======
-function similarity(a, b) {
+function similarityStyle(a, b) {
   a = a.toLowerCase().trim();
   b = b.toLowerCase().trim();
   if (a === b) return 1;
-  // Exact contain
   if (b.includes(a) || a.includes(b)) return 0.9;
-  // SPO format match: cek prefix dan tahun
-  const spoA = a.replace(/[^a-z0-9]/g,'');
-  const spoB = b.replace(/[^a-z0-9]/g,'');
-  if (spoA === spoB) return 0.95;
-  if (spoA.length >= 4 && spoB.startsWith(spoA.slice(0,4))) return 0.8;
-  // Word match
   const wordsA = a.split(/[\s\-\/]+/).filter(w => w.length > 1);
   const wordsB = b.split(/[\s\-\/]+/).filter(w => w.length > 1);
   if (wordsA.length === 0) return 0;
@@ -321,13 +314,31 @@ function similarity(a, b) {
   return matches / Math.max(wordsA.length, wordsB.length);
 }
 
-function getTopMatches(query, list, topN = 4) {
+function similaritySPO(a, b) {
+  // User ucapkan angka saja misal "2023/26", master list "S2023/26"
+  // Ekstrak hanya angka dan slash
+  const numA = a.replace(/[^0-9\/]/g, '').trim();
+  const numB = b.replace(/[^0-9\/]/g, '').trim();
+  if (numA.length === 0 || numB.length === 0) return 0;
+  if (numA === numB) return 1;
+  if (numB.includes(numA) || numA.includes(numB)) return 0.95;
+  // Cek tahun (bagian setelah /)
+  const yearA = a.split('/')[1]?.trim();
+  const yearB = b.split('/')[1]?.trim();
+  const numOnlyA = a.split('/')[0]?.replace(/[^0-9]/g,'');
+  const numOnlyB = b.split('/')[0]?.replace(/[^0-9]/g,'');
+  if (yearA && yearB && yearA === yearB && numOnlyA && numOnlyB && numOnlyA === numOnlyB) return 0.98;
+  if (yearA && yearB && yearA === yearB) return 0.5;
+  return 0;
+}
+
+function getTopMatches(query, list, topN = 4, type = 'style') {
   if (!query || query === '-' || list.length === 0) {
     return list.slice(0, topN).map(v => ({value: v, score: 0}));
   }
-  const scored = list.map(v => ({value: v, score: similarity(query, v)}));
+  const simFn = type === 'spo' ? similaritySPO : similarityStyle;
+  const scored = list.map(v => ({value: v, score: simFn(query, v)}));
   scored.sort((a, b) => b.score - a.score);
-  // Filter duplikat
   const seen = new Set();
   const unique = scored.filter(m => { if (seen.has(m.value)) return false; seen.add(m.value); return true; });
   return unique.slice(0, topN);
@@ -357,7 +368,7 @@ Aturan:
 - qty harus angka saja (tanpa satuan)
 - "pic" adalah nama leader/supervisor yang melapor (biasanya disebut di awal)
 - "operator" adalah nama operator (biasanya setelah kata "oleh operator")
-- "spo" adalah nomor kode produksi (biasanya setelah kata "SPO") - tulis apa adanya dari transkripsi
+- "spo" adalah nomor kode produksi yang disebutkan setelah kata "SPO". User mungkin hanya menyebut angkanya saja misal "2023/26" tanpa prefix huruf. Tulis apa adanya dari transkripsi.
 - "style" adalah nama produk sepatu/garmen yang diproduksi. PERHATIAN: kode seperti "F04", "F08", "F12", "line F04" BUKAN style - itu adalah nama line/divisi. Style biasanya berupa nama produk lengkap seperti "Stablegrip Natural Fit 2016", "Tour Authentic 2025", "Adidas Ultraboost". Tulis apa adanya dari transkripsi.
 - "divisi" adalah divisi/bagian produksi
 
@@ -396,8 +407,8 @@ Transkripsi:
 
 // ======= TAMPILKAN KONFIRMASI =======
 function tampilkanKonfirmasi(row) {
-  const styleMatches = getTopMatches(row.style, masterStyles, 4);
-  const spoMatches = getTopMatches(row.spo, masterSPOs, 4);
+  const styleMatches = getTopMatches(row.style, masterStyles, 4, 'style');
+  const spoMatches = getTopMatches(row.spo, masterSPOs, 4, 'spo');
 
   // Render style options
   let styleHtml = '';
