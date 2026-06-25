@@ -200,19 +200,26 @@ async function loadMasterList() {
   try {
     const url = `https://docs.google.com/spreadsheets/d/${MASTER_SHEET_ID}/export?format=csv&sheet=${encodeURIComponent(MASTER_SHEET_NAME)}`;
     const res = await fetch(url);
-    if (!res.ok) throw new Error('Gagal fetch CSV');
+    if (!res.ok) throw new Error('Gagal fetch');
     const text = await res.text();
-    const rows = text.trim().split('\n').slice(1); // skip header row
-    masterStyles = [];
-    masterSPOs = [];
-    rows.forEach(row => {
-      const cols = row.split(',');
+    masterStyles = []; masterSPOs = [];
+    const lines = text.trim().split('\n');
+    const startIdx = (lines[0].toLowerCase().includes('style') || lines[0].toLowerCase().includes('spo')) ? 1 : 0;
+    lines.slice(startIdx).forEach(line => {
+      const cols = [];
+      let cur = '', inQ = false;
+      for (let c of line) {
+        if (c === '"') inQ = !inQ;
+        else if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+        else cur += c;
+      }
+      cols.push(cur.trim());
       const style = cols[0]?.replace(/^"|"$/g,'').trim();
       const spo = cols[1]?.replace(/^"|"$/g,'').trim();
-      if (style) masterStyles.push(style);
-      if (spo) masterSPOs.push(spo);
+      if (style && style.length > 0) masterStyles.push(style);
+      if (spo && spo.length > 0) masterSPOs.push(spo);
     });
-    setStatus(`✅ Master list loaded: ${masterStyles.length} style, ${masterSPOs.length} SPO`);
+    setStatus(`✅ Master list: ${masterStyles.length} style, ${masterSPOs.length} SPO`);
   } catch(e) {
     setStatus('⚠️ Gagal load master list: ' + e.message);
   }
@@ -289,20 +296,34 @@ function stopLiveSpeech() {
 
 // ======= SIMILARITY (fuzzy match) =======
 function similarity(a, b) {
-  a = a.toLowerCase(); b = b.toLowerCase();
+  a = a.toLowerCase().trim();
+  b = b.toLowerCase().trim();
   if (a === b) return 1;
-  if (b.includes(a) || a.includes(b)) return 0.85;
-  const wordsA = a.split(/\s+/);
-  const wordsB = b.split(/\s+/);
+  // Exact contain
+  if (b.includes(a) || a.includes(b)) return 0.9;
+  // SPO format match: cek prefix dan tahun
+  const spoA = a.replace(/[^a-z0-9]/g,'');
+  const spoB = b.replace(/[^a-z0-9]/g,'');
+  if (spoA === spoB) return 0.95;
+  if (spoA.length >= 4 && spoB.startsWith(spoA.slice(0,4))) return 0.8;
+  // Word match
+  const wordsA = a.split(/[\s\-\/]+/).filter(w => w.length > 1);
+  const wordsB = b.split(/[\s\-\/]+/).filter(w => w.length > 1);
+  if (wordsA.length === 0) return 0;
   let matches = wordsA.filter(w => wordsB.some(wb => wb.includes(w) || w.includes(wb))).length;
   return matches / Math.max(wordsA.length, wordsB.length);
 }
 
 function getTopMatches(query, list, topN = 4) {
-  if (!query || query === '-') return list.slice(0, topN).map(v => ({value: v, score: 0}));
+  if (!query || query === '-' || list.length === 0) {
+    return list.slice(0, topN).map(v => ({value: v, score: 0}));
+  }
   const scored = list.map(v => ({value: v, score: similarity(query, v)}));
   scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, topN);
+  // Filter duplikat
+  const seen = new Set();
+  const unique = scored.filter(m => { if (seen.has(m.value)) return false; seen.add(m.value); return true; });
+  return unique.slice(0, topN);
 }
 
 // ======= AI PARSING =======
@@ -330,7 +351,7 @@ Aturan:
 - "pic" adalah nama leader/supervisor yang melapor (biasanya disebut di awal)
 - "operator" adalah nama operator (biasanya setelah kata "oleh operator")
 - "spo" adalah nomor kode produksi (biasanya setelah kata "SPO") - tulis apa adanya dari transkripsi
-- "style" adalah nama style produk - tulis apa adanya dari transkripsi
+- "style" adalah nama produk/style yang diproduksi (BUKAN nama divisi, line, atau kode lain). Tulis apa adanya dari transkripsi. Contoh: "Tour Authentic 2025", "Stablegrip Natural Fit 2016"
 - "divisi" adalah divisi/bagian produksi
 
 Format JSON:
@@ -382,9 +403,17 @@ function tampilkanKonfirmasi(row) {
       <span>${m.value}</span>${badgeHtml}
     </label>`;
   });
-  styleHtml += `<label class="suggest-skip" id="style-item-${styleMatches.length}">
-    <input type="radio" name="style-pick" value="-" onchange="highlightSelected('style',${styleMatches.length},${styleMatches.length})">
-    <span>⏭️ Lewati (tidak ada style)</span>
+  const styleTotal = styleMatches.length;
+  const rawStyle = parsedRows[0]?.style && parsedRows[0].style !== '-' ? parsedRows[0].style : '';
+  if (rawStyle) {
+    styleHtml += `<label class="suggest-skip" id="style-item-${styleTotal}" style="border-color:#0D9488;color:#0D9488;">
+      <input type="radio" name="style-pick" value="${rawStyle}" onchange="highlightSelected('style',${styleTotal},${styleTotal+1})">
+      <span>📝 Pakai dari transkripsi: <b>${rawStyle}</b></span>
+    </label>`;
+  }
+  styleHtml += `<label class="suggest-skip" id="style-item-${styleTotal+1}">
+    <input type="radio" name="style-pick" value="-" onchange="highlightSelected('style',${styleTotal+1},${styleTotal+1})">
+    <span>⏭️ Lewati (kosongkan Style)</span>
   </label>`;
 
   // Render SPO options
@@ -398,9 +427,19 @@ function tampilkanKonfirmasi(row) {
       <span>${m.value}</span>${badgeHtml}
     </label>`;
   });
-  spoHtml += `<label class="suggest-skip" id="spo-item-${spoMatches.length}">
-    <input type="radio" name="spo-pick" value="-" onchange="highlightSelected('spo',${spoMatches.length},${spoMatches.length})">
-    <span>⏭️ Lewati (tidak ada SPO)</span>
+  const spoTotal = spoMatches.length;
+  // Opsi: pakai dari transkripsi
+  const rawSpo = parsedRows[0]?.spo && parsedRows[0].spo !== '-' ? parsedRows[0].spo : '';
+  if (rawSpo) {
+    spoHtml += `<label class="suggest-skip" id="spo-item-${spoTotal}" style="border-color:#0D9488;color:#0D9488;">
+      <input type="radio" name="spo-pick" value="${rawSpo}" onchange="highlightSelected('spo',${spoTotal},${spoTotal+1})">
+      <span>📝 Pakai dari transkripsi: <b>${rawSpo}</b></span>
+    </label>`;
+  }
+  // Opsi: lewati
+  spoHtml += `<label class="suggest-skip" id="spo-item-${spoTotal+1}">
+    <input type="radio" name="spo-pick" value="-" onchange="highlightSelected('spo',${spoTotal+1},${spoTotal+1})">
+    <span>⏭️ Lewati (kosongkan SPO)</span>
   </label>`;
 
   document.getElementById('style-suggest').innerHTML = styleHtml;
