@@ -245,31 +245,44 @@ function fmtTime(s){return fmt2(Math.floor(s/60))+':'+fmt2(s%60)}
 let selectedSPO = '';
 let selectedStyle = '';
 
+// Simpan referensi items untuk onclick
+let filteredItems = [];
+
 function renderSPODropdown(query) {
   const list = document.getElementById('spo-suggest-list');
   if (!masterItems.length) { list.style.display = 'none'; return; }
-  
+
   let filtered = masterItems;
   if (query.length > 0) {
-    filtered = masterItems.filter(i => 
+    filtered = masterItems.filter(i =>
       i.spo.toLowerCase().includes(query.toLowerCase())
     );
   }
-  
+
   if (filtered.length === 0) {
     list.innerHTML = '<div style="padding:10px 12px;font-size:13px;color:#aaa">Tidak ditemukan</div>';
     list.style.display = 'block';
     return;
   }
 
-  const show = filtered.slice(0, 8);
-  list.innerHTML = show.map(i => `
-    <div onclick="pilihSPO('${i.spo.replace(/'/g,"\'")}','${i.style.replace(/'/g,"\'")}'))"
+  filteredItems = filtered.slice(0, 8);
+  list.innerHTML = filteredItems.map((item, idx) => `
+    <div data-idx="${idx}"
       style="padding:10px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid #F0F0EC;display:flex;justify-content:space-between;align-items:center"
       onmouseover="this.style.background='#E0F2F1'" onmouseout="this.style.background=''">
-      <span style="font-weight:600">${i.spo}</span>
-      <span style="font-size:11px;color:#888;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.style}</span>
+      <span style="font-weight:600">${item.spo}</span>
+      <span style="font-size:11px;color:#888;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.style}</span>
     </div>`).join('');
+
+  // Pakai event delegation - lebih reliable dari onclick inline
+  list.onclick = (e) => {
+    const row = e.target.closest('[data-idx]');
+    if (!row) return;
+    const idx = parseInt(row.getAttribute('data-idx'));
+    const item = filteredItems[idx];
+    if (item) pilihSPO(item.spo, item.style);
+  };
+
   list.style.display = 'block';
 }
 
