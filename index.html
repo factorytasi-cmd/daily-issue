@@ -121,7 +121,7 @@
     <div class="card-label">📋 Pilih SPO & Style</div>
     <div class="config-row">
       <label>Cari SPO</label>
-      <input type="text" id="spo-search" placeholder="Ketik nomor SPO..." oninput="onSPOSearch(this.value)" autocomplete="off">
+      <input type="text" id="spo-search" placeholder="Ketik nomor SPO..." oninput="onSPOSearch(this.value)" onfocus="onSPOSearch(this.value)" autocomplete="off" autofocus>
     </div>
     <div id="spo-suggest-list" style="margin-top:6px;max-height:180px;overflow-y:auto;border:1px solid #E0E0DC;border-radius:8px;display:none"></div>
     <div id="spo-selected" style="display:none;margin-top:10px;padding:10px 12px;background:#E0F2F1;border-radius:8px;">
@@ -225,7 +225,12 @@ async function loadMasterList() {
     masterStyles = [...new Set(masterItems.map(i => i.style))];
     masterSPOs   = [...new Set(masterItems.map(i => i.spo))];
     setStatus(`✅ Master list: ${masterItems.length} pasang SPO-Style`);
-    renderSPODropdown('');
+    // Auto focus dan tampilkan dropdown setelah master list loaded
+    const spoInput = document.getElementById('spo-search');
+    if (spoInput) {
+      spoInput.focus();
+      renderSPODropdown(spoInput.value);
+    }
   } catch(e) {
     setStatus('⚠️ Gagal load master list: ' + e.message);
   }
