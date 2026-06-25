@@ -198,32 +198,24 @@ window.onload = async () => {
 // ======= LOAD MASTER LIST =======
 async function loadMasterList() {
   try {
-    const gvizUrl = `https://docs.google.com/spreadsheets/d/${MASTER_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(MASTER_SHEET_NAME)}`;
-    const res = await fetch(gvizUrl);
+    // Pakai TSV (tab-separated) - lebih aman dari nama style yang mengandung koma
+    const url = `https://docs.google.com/spreadsheets/d/${MASTER_SHEET_ID}/export?format=tsv&sheet=${encodeURIComponent(MASTER_SHEET_NAME)}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Gagal fetch TSV');
     const text = await res.text();
     masterStyles = []; masterSPOs = [];
+
     const lines = text.trim().split('\n');
+    lines.forEach(line => {
+      const cols = line.split('\t');
+      const style = cols[0]?.trim();
+      const spo   = cols[1]?.trim();
 
-    lines.forEach((line, idx) => {
-      // Parse CSV dengan benar
-      const cols = [];
-      let cur = '', inQ = false;
-      for (let c of line) {
-        if (c === '"') inQ = !inQ;
-        else if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
-        else cur += c;
-      }
-      cols.push(cur.trim());
+      // Skip header
+      if (!style || style.toUpperCase() === 'STYLE') return;
 
-      const style = cols[0]?.replace(/^"|"$/g,'').trim();
-      const spo   = cols[1]?.replace(/^"|"$/g,'').trim();
-
-      // Skip baris header (STYLE / SPO)
-      const isHeader = style?.toUpperCase() === 'STYLE' || spo?.toUpperCase() === 'SPO';
-      if (isHeader) return;
-
-      if (style && style.length > 0) masterStyles.push(style);
-      if (spo   && spo.length > 0)   masterSPOs.push(spo);
+      if (style.length > 0) masterStyles.push(style);
+      if (spo && spo.toUpperCase() !== 'SPO' && spo.length > 0) masterSPOs.push(spo);
     });
 
     setStatus(`✅ Master list: ${masterStyles.length} style, ${masterSPOs.length} SPO`);
