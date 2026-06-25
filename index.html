@@ -488,6 +488,24 @@ Transkripsi:
   document.getElementById('btn-parse').disabled = false;
 }
 
+// ======= RENDER PREVIEW =======
+function renderPreview(rows) {
+  if (!rows.length) return;
+  let html = '<div class="preview-wrap"><table><thead><tr>';
+  ['Tanggal','Divisi','PIC','Style','Issue','Size','Qty','Kategori','Operator','SPO'].forEach(c => html += `<th>${c}</th>`);
+  html += '</tr></thead><tbody>';
+  rows.forEach(r => {
+    html += `<tr>
+      <td>${r.tanggal}</td><td>${r.divisi}</td><td>${r.pic}</td>
+      <td>${r.style}</td><td>${r.issue}</td><td>${r.size}</td><td>${r.qty}</td>
+      <td><span class="badge-kategori">${r.kategori}</span></td>
+      <td>${r.operator}</td><td>${r.spo}</td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('preview-area').innerHTML = html;
+}
+
 // ======= KIRIM KE SHEET =======
 async function kirimKeSheet() {
   const gasUrl = document.getElementById('cfg-gasurl').value.trim();
