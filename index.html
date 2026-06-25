@@ -116,6 +116,21 @@
     <p style="font-size:11px;color:#aaa;margin-top:6px">Isi sekali, tersimpan di perangkat ini.</p>
   </div>
 
+  <!-- SPO PICKER -->
+  <div class="card" id="spo-picker-card">
+    <div class="card-label">📋 Pilih SPO & Style</div>
+    <div class="config-row">
+      <label>Cari SPO</label>
+      <input type="text" id="spo-search" placeholder="Ketik nomor SPO..." oninput="onSPOSearch(this.value)" autocomplete="off">
+    </div>
+    <div id="spo-suggest-list" style="margin-top:6px;max-height:180px;overflow-y:auto;border:1px solid #E0E0DC;border-radius:8px;display:none"></div>
+    <div id="spo-selected" style="display:none;margin-top:10px;padding:10px 12px;background:#E0F2F1;border-radius:8px;">
+      <div style="font-size:11px;color:#0D9488;font-weight:600;margin-bottom:4px">DIPILIH</div>
+      <div style="font-size:14px;font-weight:600" id="spo-selected-val"></div>
+      <div style="font-size:12px;color:#555;margin-top:2px">Style: <span id="style-selected-val" style="font-weight:600;color:#0D9488"></span></div>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-label">🎙️ Rekam Audio</div>
     <div class="rec-center">
@@ -142,21 +157,7 @@
     </div>
   </div>
 
-  <!-- KONFIRMASI STYLE & SPO -->
-  <div class="confirm-card" id="confirm-card" style="display:none">
-    <div class="confirm-title">🔍 Konfirmasi Style & SPO</div>
-    <div class="confirm-section">
-      <label>Pilih Style yang sesuai:</label>
-      <div class="suggest-list" id="style-suggest"></div>
-    </div>
-    <div class="confirm-section">
-      <label>Pilih SPO yang sesuai:</label>
-      <div class="suggest-list" id="spo-suggest"></div>
-    </div>
-    <div class="btn-row" style="margin-top:8px">
-      <button class="btn btn-teal" onclick="konfirmasiDanPreview()">✅ Konfirmasi & Lihat Preview</button>
-    </div>
-  </div>
+
 
   <div class="card">
     <div class="card-label">📋 Preview Data</div>
@@ -196,12 +197,11 @@ window.onload = async () => {
 };
 
 // ======= LOAD MASTER LIST =======
+let masterItems = []; // [{spo, style}]
+
 async function loadMasterList() {
   const gasUrl = localStorage.getItem('dip_gasurl');
-  if (!gasUrl) {
-    setStatus('⚠️ Isi Google Apps Script URL di Konfigurasi dulu.');
-    return;
-  }
+  if (!gasUrl) { setStatus('⚠️ Isi Google Apps Script URL dulu.'); return; }
   try {
     const data = await new Promise((resolve, reject) => {
       const callbackName = 'cb_' + Date.now();
@@ -221,9 +221,11 @@ async function loadMasterList() {
       script.onerror = () => { clearTimeout(timer); reject(new Error('Load error')); };
       document.body.appendChild(script);
     });
-    masterStyles = data.styles || [];
-    masterSPOs   = data.spos   || [];
-    setStatus(`✅ Master list: ${masterStyles.length} style, ${masterSPOs.length} SPO`);
+    masterItems = data.items || [];
+    masterStyles = [...new Set(masterItems.map(i => i.style))];
+    masterSPOs   = [...new Set(masterItems.map(i => i.spo))];
+    setStatus(`✅ Master list: ${masterItems.length} pasang SPO-Style`);
+    renderSPODropdown('');
   } catch(e) {
     setStatus('⚠️ Gagal load master list: ' + e.message);
   }
@@ -238,6 +240,56 @@ function animWave(on) {
 }
 function fmt2(n){return String(n).padStart(2,'0')}
 function fmtTime(s){return fmt2(Math.floor(s/60))+':'+fmt2(s%60)}
+
+// ======= SPO PICKER =======
+let selectedSPO = '';
+let selectedStyle = '';
+
+function renderSPODropdown(query) {
+  const list = document.getElementById('spo-suggest-list');
+  if (!masterItems.length) { list.style.display = 'none'; return; }
+  
+  let filtered = masterItems;
+  if (query.length > 0) {
+    filtered = masterItems.filter(i => 
+      i.spo.toLowerCase().includes(query.toLowerCase())
+    );
+  }
+  
+  if (filtered.length === 0) {
+    list.innerHTML = '<div style="padding:10px 12px;font-size:13px;color:#aaa">Tidak ditemukan</div>';
+    list.style.display = 'block';
+    return;
+  }
+
+  const show = filtered.slice(0, 8);
+  list.innerHTML = show.map(i => `
+    <div onclick="pilihSPO('${i.spo.replace(/'/g,"\'")}','${i.style.replace(/'/g,"\'")}'))"
+      style="padding:10px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid #F0F0EC;display:flex;justify-content:space-between;align-items:center"
+      onmouseover="this.style.background='#E0F2F1'" onmouseout="this.style.background=''">
+      <span style="font-weight:600">${i.spo}</span>
+      <span style="font-size:11px;color:#888;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.style}</span>
+    </div>`).join('');
+  list.style.display = 'block';
+}
+
+function onSPOSearch(val) {
+  renderSPODropdown(val);
+  if (!val) {
+    selectedSPO = ''; selectedStyle = '';
+    document.getElementById('spo-selected').style.display = 'none';
+  }
+}
+
+function pilihSPO(spo, style) {
+  selectedSPO = spo;
+  selectedStyle = style;
+  document.getElementById('spo-search').value = spo;
+  document.getElementById('spo-suggest-list').style.display = 'none';
+  document.getElementById('spo-selected-val').textContent = spo;
+  document.getElementById('style-selected-val').textContent = style;
+  document.getElementById('spo-selected').style.display = 'block';
+}
 
 // ======= RECORD =======
 async function toggleRecord() {
@@ -375,20 +427,22 @@ async function parseWithAI() {
 
 Dari transkripsi audio berikut, ekstrak data dan kembalikan HANYA JSON array (tanpa penjelasan, tanpa markdown).
 
+PENTING: SPO dan Style sudah dipilih sebelumnya, gunakan nilai ini dan JANGAN ubah:
+- spo: "${selectedSPO || '-'}"
+- style: "${selectedStyle || '-'}"
+
 Aturan:
 - Jika ada beberapa size, buat SATU objek per size
 - Tanggal hari ini: ${today}
 - Kategori: tentukan sendiri berdasarkan isi issue (contoh: Material Defect, Sewing Defect, Cutting Error, Machine Down, Material Shortage, Quality Issue, dll)
 - Jika ada field yang tidak disebutkan, isi dengan "-"
 - qty harus angka saja (tanpa satuan)
-- "pic" adalah nama leader/supervisor yang melapor (biasanya disebut di awal)
-- "operator" adalah nama operator (biasanya setelah kata "oleh operator")
-- "spo" adalah nomor kode produksi yang disebutkan setelah kata "SPO". User mungkin hanya menyebut angkanya saja misal "2023/26" tanpa prefix huruf. Tulis apa adanya dari transkripsi.
-- "style" adalah nama produk sepatu/garmen yang diproduksi. PERHATIAN: kode seperti "F04", "F08", "F12", "line F04" BUKAN style - itu adalah nama line/divisi. Style biasanya berupa nama produk lengkap seperti "Stablegrip Natural Fit 2016", "Tour Authentic 2025", "Adidas Ultraboost". Tulis apa adanya dari transkripsi.
-- "divisi" adalah divisi/bagian produksi
+- "pic" adalah nama leader/supervisor yang melapor (biasanya disebut di awal kalimat)
+- "operator" adalah nama operator (biasanya setelah kata "oleh operator" atau "operator")
+- "divisi" adalah divisi/bagian produksi (contoh: cutting, sewing, finishing)
 
 Format JSON:
-[{"tanggal":"...","divisi":"...","pic":"...","style":"...","issue":"...","size":"...","qty":"...","kategori":"...","operator":"...","spo":"..."}]
+[{"tanggal":"...","divisi":"...","pic":"...","style":"${selectedStyle || '-'}","issue":"...","size":"...","qty":"...","kategori":"...","operator":"...","spo":"${selectedSPO || '-'}"}]
 
 Transkripsi:
 "${transkrip}"`;
@@ -409,121 +463,16 @@ Transkripsi:
     const clean = data.content[0].text.trim().replace(/```json|```/g,'').trim();
     parsedRows = JSON.parse(clean);
 
-    // Tampilkan konfirmasi style & SPO
-    tampilkanKonfirmasi(parsedRows[0]);
-    setStatus('✅ Parsing selesai! Konfirmasi Style & SPO di bawah.');
+    // Langsung render preview - SPO & Style sudah dipilih di awal
+    renderPreview(parsedRows);
+    document.getElementById('btn-kirim').disabled = false;
+    setStatus('✅ Parsing selesai! Periksa preview lalu kirim ke Sheet.');
     showToast('Parsing berhasil!', 'success');
   } catch(e) {
     setStatus('❌ Gagal parsing: ' + e.message);
     showToast('Gagal parsing AI', 'error');
   }
   document.getElementById('btn-parse').disabled = false;
-}
-
-// ======= TAMPILKAN KONFIRMASI =======
-function tampilkanKonfirmasi(row) {
-  const styleMatches = getTopMatches(row.style, masterStyles, 4, 'style');
-  const spoMatches = getTopMatches(row.spo, masterSPOs, 4, 'spo');
-
-  // Render style options
-  let styleHtml = '';
-  styleMatches.forEach((m, i) => {
-    const badgeClass = m.score > 0.7 ? 'match-high' : 'match-med';
-    const badgeText = m.score > 0.7 ? 'Mirip' : 'Mungkin';
-    const badgeHtml = m.score > 0 ? `<span class="match-badge ${badgeClass}">${badgeText}</span>` : '';
-    styleHtml += `<label class="suggest-item" id="style-item-${i}">
-      <input type="radio" name="style-pick" value="${m.value}" ${i===0?'checked':''} onchange="highlightSelected('style',${i},${styleMatches.length})">
-      <span>${m.value}</span>${badgeHtml}
-    </label>`;
-  });
-  const styleTotal = styleMatches.length;
-  const rawStyle = parsedRows[0]?.style && parsedRows[0].style !== '-' ? parsedRows[0].style : '';
-  if (rawStyle) {
-    styleHtml += `<label class="suggest-skip" id="style-item-${styleTotal}" style="border-color:#0D9488;color:#0D9488;">
-      <input type="radio" name="style-pick" value="${rawStyle}" onchange="highlightSelected('style',${styleTotal},${styleTotal+1})">
-      <span>📝 Pakai dari transkripsi: <b>${rawStyle}</b></span>
-    </label>`;
-  }
-  styleHtml += `<label class="suggest-skip" id="style-item-${styleTotal+1}">
-    <input type="radio" name="style-pick" value="-" onchange="highlightSelected('style',${styleTotal+1},${styleTotal+1})">
-    <span>⏭️ Lewati (kosongkan Style)</span>
-  </label>`;
-
-  // Render SPO options
-  let spoHtml = '';
-  spoMatches.forEach((m, i) => {
-    const badgeClass = m.score > 0.7 ? 'match-high' : 'match-med';
-    const badgeText = m.score > 0.7 ? 'Mirip' : 'Mungkin';
-    const badgeHtml = m.score > 0 ? `<span class="match-badge ${badgeClass}">${badgeText}</span>` : '';
-    spoHtml += `<label class="suggest-item" id="spo-item-${i}">
-      <input type="radio" name="spo-pick" value="${m.value}" ${i===0?'checked':''} onchange="highlightSelected('spo',${i},${spoMatches.length})">
-      <span>${m.value}</span>${badgeHtml}
-    </label>`;
-  });
-  const spoTotal = spoMatches.length;
-  // Opsi: pakai dari transkripsi
-  const rawSpo = parsedRows[0]?.spo && parsedRows[0].spo !== '-' ? parsedRows[0].spo : '';
-  if (rawSpo) {
-    spoHtml += `<label class="suggest-skip" id="spo-item-${spoTotal}" style="border-color:#0D9488;color:#0D9488;">
-      <input type="radio" name="spo-pick" value="${rawSpo}" onchange="highlightSelected('spo',${spoTotal},${spoTotal+1})">
-      <span>📝 Pakai dari transkripsi: <b>${rawSpo}</b></span>
-    </label>`;
-  }
-  // Opsi: lewati
-  spoHtml += `<label class="suggest-skip" id="spo-item-${spoTotal+1}">
-    <input type="radio" name="spo-pick" value="-" onchange="highlightSelected('spo',${spoTotal+1},${spoTotal+1})">
-    <span>⏭️ Lewati (kosongkan SPO)</span>
-  </label>`;
-
-  document.getElementById('style-suggest').innerHTML = styleHtml;
-  document.getElementById('spo-suggest').innerHTML = spoHtml;
-  document.getElementById('confirm-card').style.display = 'block';
-  highlightSelected('style', 0, styleMatches.length);
-  highlightSelected('spo', 0, spoMatches.length);
-
-  // Scroll ke konfirmasi
-  document.getElementById('confirm-card').scrollIntoView({behavior:'smooth', block:'start'});
-}
-
-function highlightSelected(type, idx, total) {
-  for (let i = 0; i <= total; i++) {
-    const el = document.getElementById(`${type}-item-${i}`);
-    if (el) {
-      if (i === idx) el.classList.add('selected');
-      else el.classList.remove('selected');
-    }
-  }
-}
-
-// ======= KONFIRMASI & PREVIEW =======
-function konfirmasiDanPreview() {
-  const stylePick = document.querySelector('input[name="style-pick"]:checked')?.value || '-';
-  const spoPick = document.querySelector('input[name="spo-pick"]:checked')?.value || '-';
-
-  parsedRows = parsedRows.map(r => ({...r, style: stylePick, spo: spoPick}));
-  renderPreview(parsedRows);
-  document.getElementById('btn-kirim').disabled = false;
-  document.getElementById('confirm-card').style.display = 'none';
-  setStatus('✅ Data siap dikirim ke Google Sheet!');
-  document.getElementById('preview-area').scrollIntoView({behavior:'smooth'});
-}
-
-// ======= RENDER PREVIEW =======
-function renderPreview(rows) {
-  if (!rows.length) return;
-  let html = '<div class="preview-wrap"><table><thead><tr>';
-  ['Tanggal','Divisi','PIC','Style','Issue','Size','Qty','Kategori','Operator','SPO'].forEach(c => html += `<th>${c}</th>`);
-  html += '</tr></thead><tbody>';
-  rows.forEach(r => {
-    html += `<tr>
-      <td>${r.tanggal}</td><td>${r.divisi}</td><td>${r.pic}</td>
-      <td>${r.style}</td><td>${r.issue}</td><td>${r.size}</td><td>${r.qty}</td>
-      <td><span class="badge-kategori">${r.kategori}</span></td>
-      <td>${r.operator}</td><td>${r.spo}</td>
-    </tr>`;
-  });
-  html += '</tbody></table></div>';
-  document.getElementById('preview-area').innerHTML = html;
 }
 
 // ======= KIRIM KE SHEET =======
@@ -556,8 +505,12 @@ function clearAll() {
   document.getElementById('audio-player').style.display = 'none';
   document.getElementById('audio-player').src = '';
   document.getElementById('preview-area').innerHTML = '<div class="empty-preview">Belum ada data. Rekam dan parsing terlebih dahulu.</div>';
-  document.getElementById('confirm-card').style.display = 'none';
   document.getElementById('btn-kirim').disabled = true;
+  // Reset SPO picker
+  document.getElementById('spo-search').value = '';
+  document.getElementById('spo-selected').style.display = 'none';
+  document.getElementById('spo-suggest-list').style.display = 'none';
+  selectedSPO = ''; selectedStyle = '';
   setStatus('');
   animWave(false);
   recSecs = 0; parsedRows = [];
