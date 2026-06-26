@@ -363,11 +363,39 @@ function setBanner(type, msg) {
   document.getElementById('banner-text').textContent = msg;
 }
 
-// ======= LOAD MASTER LIST =======
+// ======= LOAD MASTER LIST WITH CACHE =======
+const CACHE_KEY = 'litra_daily_issue_db';
+const CACHE_TTL = 60 * 60 * 1000; // 1 jam
+
 async function loadMasterList() {
   const gasUrl = localStorage.getItem(GASURL_KEY);
   if (!gasUrl) { setBanner('info', 'Isi API Key & Script URL di Konfigurasi'); return; }
-  showLoading('Memuat master list...');
+
+  // Cek cache dulu
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (raw) {
+      const cache = JSON.parse(raw);
+      if (Date.now() - cache.ts < CACHE_TTL) {
+        // Cache masih fresh — langsung pakai, instan!
+        masterItems = cache.items;
+        setupSPOInput();
+        document.getElementById('spo-input').focus();
+        setBanner('done', `✓ ${masterItems.length} SPO-Style siap`);
+        setTimeout(() => setBanner('',''), 3000);
+        // Refresh di background diam-diam
+        fetchAndCache(false, gasUrl);
+        return;
+      }
+    }
+  } catch(e) {}
+
+  // Tidak ada cache / expired → tarik dari GAS dengan loading
+  await fetchAndCache(true, gasUrl);
+}
+
+async function fetchAndCache(showLoader, gasUrl) {
+  if (showLoader) showLoading('Memuat master list...');
   try {
     const data = await new Promise((resolve, reject) => {
       const cbName = 'cb_' + Date.now();
@@ -387,14 +415,34 @@ async function loadMasterList() {
       script.onerror = () => { clearTimeout(timer); reject(new Error('Load error')); };
       document.body.appendChild(script);
     });
+
     masterItems = data.items || [];
-    hideLoading();
-    setBanner('done', `✓ Master list: ${masterItems.length} SPO-Style loaded`);
-    setTimeout(() => setBanner('', ''), 4000);
-    document.getElementById('spo-input').focus();
+    // Simpan ke cache dengan timestamp
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), items: masterItems }));
+
+    if (showLoader) {
+      hideLoading();
+      setupSPOInput();
+      document.getElementById('spo-input').focus();
+      setBanner('done', `✓ Master list: ${masterItems.length} SPO-Style loaded`);
+      setTimeout(() => setBanner('',''), 4000);
+    }
   } catch(e) {
-    hideLoading();
-    setBanner('failed', 'Gagal load master list: ' + e.message);
+    if (showLoader) {
+      hideLoading();
+      // Kalau gagal tapi ada cache lama → tetap pakai
+      try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (raw) {
+          masterItems = JSON.parse(raw).items || [];
+          setupSPOInput();
+          document.getElementById('spo-input').focus();
+          setBanner('info', `Offline — pakai data tersimpan (${masterItems.length} SPO-Style)`);
+          return;
+        }
+      } catch(e2) {}
+      setBanner('failed', 'Gagal load master list. Cek koneksi.');
+    }
   }
 }
 
