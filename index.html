@@ -379,8 +379,6 @@ async function loadMasterList() {
       if (Date.now() - cache.ts < CACHE_TTL) {
         // Cache masih fresh — langsung pakai, instan!
         masterItems = cache.items;
-        setupSPOInput();
-        document.getElementById('spo-input').focus();
         setBanner('done', `✓ ${masterItems.length} SPO-Style siap`);
         setTimeout(() => setBanner('',''), 3000);
         // Refresh di background diam-diam
@@ -422,8 +420,6 @@ async function fetchAndCache(showLoader, gasUrl) {
 
     if (showLoader) {
       hideLoading();
-      setupSPOInput();
-      document.getElementById('spo-input').focus();
       setBanner('done', `✓ Master list: ${masterItems.length} SPO-Style loaded`);
       setTimeout(() => setBanner('',''), 4000);
     }
@@ -435,8 +431,6 @@ async function fetchAndCache(showLoader, gasUrl) {
         const raw = localStorage.getItem(CACHE_KEY);
         if (raw) {
           masterItems = JSON.parse(raw).items || [];
-          setupSPOInput();
-          document.getElementById('spo-input').focus();
           setBanner('info', `Offline — pakai data tersimpan (${masterItems.length} SPO-Style)`);
           return;
         }
