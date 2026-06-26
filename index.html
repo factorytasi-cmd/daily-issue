@@ -2,312 +2,471 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>LITRA-ASI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0A1A1D">
+<title>LITRA-ASI — Daily Issue</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F5F5F0; color: #1A1A1A; min-height: 100vh; }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0A1A1D;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:0 0 40px}
+.phone{width:100%;max-width:420px;background:#0A1A1D}
 
-  .topbar { background: #ffffff; color: #1A1A1A; padding: 10px 16px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid #E8E8E4; }
-  .topbar-icon { width: 36px; height: 36px; background: #0D9488; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; font-family: inherit; flex-shrink: 0; }
-  .topbar h1 { font-size: 15px; font-weight: 700; letter-spacing: 0.02em; color: #1A1A1A; }
-  .topbar p { font-size: 11px; font-weight: 400; color: #888888; margin-top: 1px; }
+/* HEADER */
+.header-zone{background:#0A1A1D;padding:16px 22px 28px}
+.status-bar{display:flex;justify-content:space-between;margin-bottom:24px;font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:.5px}
+.logo-wrap{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
+.logo-box{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#378ADD,#1D9E75);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:white;flex-shrink:0}
+.logo-text{font-size:26px;font-weight:700;color:white;letter-spacing:1.5px}
+.tagline{text-align:center;font-size:9px;color:#5DCAA5;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
+.subtitle{text-align:center;font-size:10px;color:rgba(255,255,255,0.28);margin-bottom:18px;line-height:1.4}
+.date-pill{display:flex;justify-content:center}
+.date-pill span{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:.5px solid rgba(255,255,255,0.12);border-radius:99px;padding:6px 16px;font-size:11px;color:rgba(255,255,255,0.5)}
+.page-title-bar{background:#0A1A1D;padding:0 22px 20px;text-align:center}
+.page-title-bar h1{font-size:18px;font-weight:700;color:white;letter-spacing:1px}
+.page-divider{width:40px;height:2px;background:linear-gradient(90deg,#378ADD,#1D9E75);border-radius:99px;margin:8px auto 0}
 
-  .container { padding: 16px; max-width: 480px; margin: 0 auto; }
-  .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid #E8E8E4; }
-  .card-label { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+/* STATUS BANNER */
+.status-banner{margin:0 18px 12px;border-radius:14px;padding:11px 14px;display:flex;align-items:center;gap:10px;font-size:12px;font-weight:500;display:none}
+.status-banner.show{display:flex}
+.status-banner.info{background:rgba(55,138,221,0.1);border:.5px solid rgba(55,138,221,0.25);color:#378ADD}
+.status-banner.done{background:rgba(29,158,117,0.1);border:.5px solid rgba(29,158,117,0.25);color:#1D9E75}
+.status-banner.failed{background:rgba(220,53,69,0.08);border:.5px solid rgba(220,53,69,0.25);color:#dc3545}
+.banner-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.info .banner-dot{background:#378ADD;animation:pulse 0.8s infinite}
+.done .banner-dot{background:#1D9E75}
+.failed .banner-dot{background:#dc3545}
 
-  .config-row { margin-bottom: 10px; }
-  .config-row label { font-size: 12px; color: #666; display: block; margin-bottom: 4px; }
-  .config-row input { width: 100%; padding: 9px 12px; border: 1px solid #E0E0DC; border-radius: 8px; font-size: 13px; background: #FAFAF8; color: #1A1A1A; }
-  .config-row input:focus { outline: none; border-color: #0D9488; }
+/* CONTENT */
+.content-zone{background:#F0F2F1;padding:20px 18px 28px;margin-top:12px}
+.section-lbl{font-size:10px;color:#999;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px}
 
-  .rec-center { display: flex; flex-direction: column; align-items: center; padding: 8px 0 4px; gap: 12px; }
-  .rec-ring { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.1s; border: none; background: #E0F2F1; position: relative; }
-  .rec-ring.recording { background: #E94560; animation: recpulse 1.4s infinite; }
-  .rec-ring.done { background: #E8F5E9; }
-  .rec-ring:active { transform: scale(0.95); }
-  @keyframes recpulse { 0%,100%{box-shadow:0 0 0 0 rgba(233,69,96,0.4)} 50%{box-shadow:0 0 0 14px rgba(233,69,96,0)} }
-  .rec-icon { font-size: 32px; }
-  .rec-timer { font-size: 28px; font-weight: 300; letter-spacing: 0.05em; color: #1A1A1A; font-variant-numeric: tabular-nums; }
-  .rec-status { font-size: 13px; color: #888; text-align: center; }
-  .wave { display: flex; align-items: center; gap: 3px; height: 32px; }
-  .wave-bar { width: 3px; border-radius: 2px; background: #0D9488; height: 4px; transition: height 0.07s; }
+/* CARDS */
+.form-card{background:white;border-radius:20px;border:.5px solid rgba(0,0,0,0.08);margin-bottom:16px;overflow:hidden}
+.form-card-header{background:rgba(29,158,117,0.07);padding:14px 18px;display:flex;align-items:center;gap:8px;border-bottom:.5px solid rgba(29,158,117,0.12)}
+.card-step-dot{width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,#378ADD,#1D9E75);flex-shrink:0}
+.card-title-text{font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#0A5C42}
+.form-card-body{padding:18px}
 
-  .transkrip-box { width: 100%; min-height: 80px; padding: 10px 12px; border: 1px solid #E0E0DC; border-radius: 8px; font-size: 14px; line-height: 1.6; background: #FAFAF8; color: #1A1A1A; resize: none; font-family: inherit; }
-  .transkrip-box:focus { outline: none; border-color: #0D9488; }
+/* FIELD */
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.field-label{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#999;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.field-label i{color:#1D9E75;font-size:13px}
+.field-input{width:100%;padding:11px 14px;border-radius:12px;border:1.5px solid #E5E7E6;font-size:14px;color:#111;background:#FAFAFA;outline:none;transition:border-color .15s,background .15s;font-family:inherit;appearance:none}
+.field-input:focus{border-color:#1D9E75;background:white}
+.field-input:disabled{background:#F0F2F1;color:#aaa;border-color:transparent;cursor:not-allowed}
+.field-input::placeholder{color:#BBB}
+.field-filled{background:#F0FBF7;border:1.5px solid rgba(29,158,117,0.3);border-radius:12px;padding:11px 14px;font-size:14px;color:#0A5C42;font-weight:500;display:flex;align-items:center;gap:6px;min-height:44px}
+.field-textarea{width:100%;padding:11px 14px;border-radius:12px;border:1.5px solid #E5E7E6;font-size:14px;color:#111;background:#FAFAFA;outline:none;font-family:inherit;resize:none;min-height:90px;line-height:1.5}
+.field-textarea:focus{border-color:#1D9E75;background:white}
+.field-textarea::placeholder{color:#BBB}
 
-  .status-bar { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #888; min-height: 24px; margin-top: 8px; }
-  .dot-anim { display: inline-flex; gap: 3px; }
-  .dot-anim span { width: 5px; height: 5px; border-radius: 50%; background: #0D9488; display: inline-block; animation: dotbounce 0.9s infinite; }
-  .dot-anim span:nth-child(2){animation-delay:0.15s} .dot-anim span:nth-child(3){animation-delay:0.3s}
-  @keyframes dotbounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+/* AUTOCOMPLETE */
+.ac-wrap{position:relative}
+.ac-drop{position:absolute;top:calc(100% + 4px);left:0;right:0;background:white;border-radius:14px;border:1.5px solid #E5E7E6;z-index:100;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.12);display:none}
+.ac-drop.open{display:block}
+.ac-item{padding:11px 14px;cursor:pointer;font-size:13px;color:#111;border-bottom:.5px solid #F0F2F1;transition:background .1s;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ac-item:last-child{border-bottom:none}
+.ac-item:hover,.ac-item:active{background:#F0FBF7}
+.ac-item mark{background:none;color:#1D9E75;font-weight:700}
+.ac-item .ac-spo{font-weight:700;color:#111;white-space:nowrap}
+.ac-item .ac-style{font-size:11px;color:#999;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%}
+.ac-empty{padding:12px 14px;font-size:13px;color:#999;text-align:center}
 
-  /* Konfirmasi Style & SPO */
-  .confirm-card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 2px solid #0D9488; }
-  .confirm-title { font-size: 13px; font-weight: 600; color: #0D9488; margin-bottom: 12px; }
-  .confirm-section { margin-bottom: 14px; }
-  .confirm-section label { font-size: 12px; color: #666; display: block; margin-bottom: 6px; font-weight: 500; }
-  .suggest-list { display: flex; flex-direction: column; gap: 6px; }
-  .suggest-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #E0E0DC; border-radius: 8px; cursor: pointer; font-size: 13px; background: #FAFAF8; transition: all 0.15s; }
-  .suggest-item:hover { border-color: #0D9488; background: #E0F2F1; }
-  .suggest-item.selected { border-color: #0D9488; background: #E0F2F1; font-weight: 600; }
-  .suggest-item input[type=radio] { accent-color: #0D9488; }
-  .suggest-skip { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px dashed #ccc; border-radius: 8px; cursor: pointer; font-size: 13px; color: #888; background: #fff; transition: all 0.15s; margin-top: 4px; }
-  .suggest-skip:hover { border-color: #888; color: #555; }
-  .suggest-skip.selected { border-color: #888; background: #F5F5F0; color: #333; font-weight: 600; }
-  .suggest-skip input[type=radio] { accent-color: #888; }
-  .match-badge { font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 500; }
-  .match-high { background: #E0F2F1; color: #0D9488; }
-  .match-med { background: #FFF8E1; color: #F57F17; }
+/* REC BUTTON */
+.rec-center{display:flex;flex-direction:column;align-items:center;gap:14px;padding:8px 0}
+.rec-ring{width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;background:rgba(29,158,117,0.1);transition:transform .1s;position:relative}
+.rec-ring.recording{background:#dc3545;animation:recpulse 1.4s infinite}
+.rec-ring.done{background:rgba(29,158,117,0.15)}
+.rec-ring:active{transform:scale(0.95)}
+@keyframes recpulse{0%,100%{box-shadow:0 0 0 0 rgba(220,53,69,0.4)}50%{box-shadow:0 0 0 14px rgba(220,53,69,0)}}
+.rec-icon{font-size:30px}
+.rec-timer{font-size:26px;font-weight:300;color:#111;font-variant-numeric:tabular-nums;letter-spacing:.05em}
+.rec-status{font-size:12px;color:#999;text-align:center}
+.wave{display:flex;align-items:center;gap:3px;height:28px}
+.wave-bar{width:3px;border-radius:2px;background:#1D9E75;height:4px;transition:height .07s}
 
-  .preview-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid #E8E8E4; }
-  table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 600px; }
-  th { background: #F5F5F0; padding: 8px 10px; text-align: left; font-weight: 600; color: #666; white-space: nowrap; border-bottom: 1px solid #E8E8E4; }
-  td { padding: 8px 10px; border-bottom: 1px solid #F0F0EC; color: #1A1A1A; vertical-align: top; }
-  tr:last-child td { border-bottom: none; }
-  .badge-kategori { background: #FEE8EC; color: #C0293F; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+/* DIVIDER */
+.divider{height:.5px;background:#E5E7E6;margin:14px 0}
+.section-divider{display:flex;align-items:center;gap:8px;margin:4px 0 12px}
+.section-divider span{font-size:11px;color:#aaa;white-space:nowrap}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#E5E7E6}
 
-  .btn-row { display: flex; gap: 8px; margin-top: 4px; }
-  .btn { flex: 1; padding: 11px 0; border-radius: 10px; border: 1px solid #E0E0DC; font-size: 13px; font-weight: 500; cursor: pointer; background: #fff; color: #1A1A1A; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.15s; }
-  .btn:hover { background: #F5F5F0; }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .btn-primary { background: #E94560; color: #fff; border-color: #E94560; }
-  .btn-primary:hover { background: #C0293F; }
-  .btn-teal { background: #0D9488; color: #fff; border-color: #0D9488; }
-  .btn-teal:hover { background: #0A7A6F; }
-  .btn-success { background: #1A1A2E; color: #fff; border-color: #1A1A2E; }
-  .btn-success:hover { background: #0D0D1A; }
+/* PREVIEW TABLE */
+.preview-wrap{overflow-x:auto;border-radius:12px;border:1px solid #E5E7E6}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:580px}
+th{background:#F0F2F1;padding:8px 10px;text-align:left;font-weight:600;color:#666;white-space:nowrap;border-bottom:1px solid #E5E7E6}
+td{padding:8px 10px;border-bottom:.5px solid #F0F2F1;color:#111;vertical-align:top}
+tr:last-child td{border-bottom:none}
+.badge-kategori{background:rgba(29,158,117,0.1);color:#0A5C42;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap}
 
-  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(10px); background: #1A1A2E; color: #fff; font-size: 13px; padding: 10px 20px; border-radius: 30px; opacity: 0; transition: opacity 0.25s, transform 0.25s; pointer-events: none; white-space: nowrap; z-index: 99; }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .toast.error { background: #C0293F; }
-  .toast.success { background: #2E7D32; }
+/* ERROR */
+.error-msg{font-size:11px;color:#9B1C1C;margin-top:4px;display:none}
+.error-msg.show{display:block}
 
-  .empty-preview { text-align: center; padding: 20px; color: #aaa; font-size: 13px; }
-  audio { width: 100%; margin-top: 10px; border-radius: 8px; }
-  .section-divider { display: flex; align-items: center; gap: 8px; margin: 4px 0 12px; }
-  .section-divider span { font-size: 11px; color: #aaa; white-space: nowrap; }
-  .section-divider::before,.section-divider::after { content:''; flex:1; height:1px; background:#E8E8E4; }
+/* SUBMIT */
+.submit-btn{width:100%;padding:16px;border-radius:16px;border:none;background:linear-gradient(135deg,#1D9E75,#378ADD);color:white;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s,transform .1s;letter-spacing:.3px;font-family:inherit;margin-top:4px}
+.submit-btn:active{transform:scale(0.98);opacity:.9}
+.submit-btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-secondary{width:100%;padding:13px;border-radius:14px;border:1.5px solid #E5E7E6;background:white;color:#555;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit;margin-top:8px}
+.btn-secondary:active{background:#F0F2F1}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#111;color:white;padding:12px 20px;border-radius:14px;font-size:13px;font-weight:500;z-index:999;transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;display:flex;align-items:center;gap:8px;max-width:340px}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.success{background:#0A5C42}
+.toast.error{background:#9B1C1C}
+
+/* LOADING */
+.loading-overlay{display:none;position:fixed;inset:0;background:rgba(10,26,29,0.75);z-index:500;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.loading-overlay.show{display:flex}
+.spinner{width:40px;height:40px;border:3px solid rgba(29,158,117,0.2);border-top-color:#1D9E75;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{color:white;font-size:13px;opacity:.7}
+
+/* FOOTER */
+.footer-zone{background:#0A1A1D;padding:16px 18px 28px}
+.live-row{display:flex;align-items:center;justify-content:center;gap:8px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#1D9E75;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.live-txt{font-size:11px;color:rgba(255,255,255,0.3)}
+
+/* CONFIG */
+.cfg-field{margin-bottom:10px}
+.cfg-field label{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#999;margin-bottom:6px;display:block}
+.cfg-field input{width:100%;padding:11px 14px;border-radius:12px;border:1.5px solid #E5E7E6;font-size:13px;color:#111;background:#FAFAFA;outline:none;font-family:inherit}
+.cfg-field input:focus{border-color:#1D9E75;background:white}
+
+.empty-state{text-align:center;padding:20px;color:#aaa;font-size:13px}
+audio{width:100%;margin-top:10px;border-radius:10px}
+
+@media(max-width:420px){
+  body{padding:0}
+  .phone{min-height:100vh}
+  .header-zone{padding-top:env(safe-area-inset-top,20px)}
+  .footer-zone{padding-bottom:env(safe-area-inset-bottom,28px)}
+}
 </style>
 </head>
 <body>
+<div class="phone">
 
-<div class="topbar">
-  <div class="topbar-icon">L</div>
-  <div>
-    <h1>LITRA-ASI</h1>
-    <p>Lean Intelligence Tracking & Realtime Analytics - ASI</p>
-  </div>
-</div>
-
-<div class="container">
-
-  <div class="card">
-    <div class="card-label">⚙️ Konfigurasi</div>
-    <div class="config-row">
-      <label>Anthropic API Key</label>
-      <input type="password" id="cfg-apikey" placeholder="sk-ant-api03-..." />
+  <!-- HEADER -->
+  <div class="header-zone">
+    <div class="status-bar">
+      <span>PT. ASI</span>
+      <span id="waktu">--:--</span>
     </div>
-    <div class="config-row">
-      <label>Google Apps Script URL</label>
-      <input type="text" id="cfg-gasurl" placeholder="https://script.google.com/macros/s/..." />
+    <div class="logo-wrap">
+      <div class="logo-box">L</div>
+      <div class="logo-text">LITRA-ASI</div>
     </div>
-    <p style="font-size:11px;color:#aaa;margin-top:6px">Isi sekali, tersimpan di perangkat ini.</p>
-  </div>
-
-  <!-- SPO PICKER -->
-  <div class="card" id="spo-picker-card">
-    <div class="card-label">📋 Pilih SPO & Style</div>
-    <div class="config-row">
-      <label>Cari SPO</label>
-      <input type="text" id="spo-search" placeholder="Ketik nomor SPO..." oninput="onSPOSearch(this.value)" onfocus="onSPOSearch(this.value)" autocomplete="off" autofocus>
-    </div>
-    <div id="spo-suggest-list" style="margin-top:6px;max-height:180px;overflow-y:auto;border:1px solid #E0E0DC;border-radius:8px;display:none"></div>
-    <div id="spo-selected" style="display:none;margin-top:10px;padding:10px 12px;background:#E0F2F1;border-radius:8px;">
-      <div style="font-size:11px;color:#0D9488;font-weight:600;margin-bottom:4px">DIPILIH</div>
-      <div style="font-size:14px;font-weight:600" id="spo-selected-val"></div>
-      <div style="font-size:12px;color:#555;margin-top:2px">Style: <span id="style-selected-val" style="font-weight:600;color:#0D9488"></span></div>
+    <div class="tagline">Leading Industrial Transformation</div>
+    <div class="subtitle">Lean Intelligence Tracking &amp; Realtime Analytics — ASI</div>
+    <div class="date-pill">
+      <span>
+        <i class="ti ti-calendar" style="font-size:13px"></i>
+        <span id="tgl">Memuat...</span>
+      </span>
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-label">🎙️ Rekam Audio</div>
-    <div class="rec-center">
-      <div class="wave" id="wave">
-        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+  <div class="page-title-bar">
+    <h1>DAILY ISSUE PRODUKSI</h1>
+    <div class="page-divider"></div>
+  </div>
+
+  <!-- STATUS BANNER -->
+  <div class="status-banner" id="status-banner">
+    <div class="banner-dot"></div>
+    <span id="banner-text"></span>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content-zone">
+    <div class="section-lbl">
+      <i class="ti ti-alert-triangle" style="font-size:12px;vertical-align:-1px"></i>
+      Input Issue Produksi
+    </div>
+
+    <!-- CARD KONFIGURASI -->
+    <div class="form-card" id="cfg-card">
+      <div class="form-card-header">
+        <div class="card-step-dot"></div>
+        <span class="card-title-text">⚙️ Konfigurasi</span>
       </div>
-      <div class="rec-timer" id="timer">00:00</div>
-      <button class="rec-ring" id="rec-btn" onclick="toggleRecord()">
-        <span class="rec-icon" id="rec-icon">🎙️</span>
-      </button>
-      <div class="rec-status" id="rec-status">Tekan untuk mulai merekam</div>
+      <div class="form-card-body">
+        <div class="cfg-field">
+          <label>Anthropic API Key</label>
+          <input type="password" id="cfg-apikey" placeholder="sk-ant-api03-..." />
+        </div>
+        <div class="cfg-field">
+          <label>Google Apps Script URL</label>
+          <input type="text" id="cfg-gasurl" placeholder="https://script.google.com/macros/s/..." />
+        </div>
+        <p style="font-size:11px;color:#aaa;margin-top:6px">Isi sekali, tersimpan di perangkat ini.</p>
+      </div>
     </div>
-    <audio id="audio-player" controls style="display:none"></audio>
-    <div class="section-divider"><span>Transkripsi</span></div>
-    <textarea class="transkrip-box" id="transkrip" placeholder='Hasil transkripsi muncul di sini, atau ketik manual. Contoh: "Nama saya Lukman leader line F04 ada masalah pada style Tour Authentic 2025 SPO 2020/45 jahitan karet loncatan size S 120 pcs oleh operator Ujang"'></textarea>
-    <div class="status-bar" id="status-bar"></div>
-    <div class="btn-row" style="margin-top:10px">
-      <button class="btn" onclick="clearAll()">🗑️ Bersihkan</button>
-      <button class="btn btn-primary" onclick="parseWithAI()" id="btn-parse">🤖 Parsing AI</button>
+
+    <!-- CARD 1: SPO & STYLE -->
+    <div class="form-card">
+      <div class="form-card-header">
+        <div class="card-step-dot"></div>
+        <span class="card-title-text">SPO &amp; Style</span>
+      </div>
+      <div class="form-card-body">
+        <div class="field">
+          <div class="field-label"><i class="ti ti-file-text"></i>SPO / Order</div>
+          <div class="ac-wrap">
+            <input type="text" id="spo-input" class="field-input" placeholder="Ketik nomor SPO..." autocomplete="off" />
+            <div class="ac-drop" id="spo-dropdown"></div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label"><i class="ti ti-tag"></i>Style</div>
+          <div class="field-filled" id="style-display">
+            <i class="ti ti-info-circle" style="color:#999;font-size:14px"></i>
+            <span id="style-text" style="color:#999;font-style:italic;font-size:13px">Terisi otomatis saat SPO dipilih</span>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- CARD 2: REKAM AUDIO -->
+    <div class="form-card">
+      <div class="form-card-header">
+        <div class="card-step-dot"></div>
+        <span class="card-title-text">🎙️ Rekam Audio</span>
+      </div>
+      <div class="form-card-body">
+        <div class="rec-center">
+          <div class="wave" id="wave">
+            <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+            <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+            <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+            <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+            <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+          </div>
+          <div class="rec-timer" id="timer">00:00</div>
+          <button class="rec-ring" id="rec-btn" onclick="toggleRecord()">
+            <span class="rec-icon" id="rec-icon">🎙️</span>
+          </button>
+          <div class="rec-status" id="rec-status">Tekan untuk mulai merekam</div>
+        </div>
+        <audio id="audio-player" controls style="display:none"></audio>
+        <div class="section-divider" style="margin-top:14px"><span>Transkripsi</span></div>
+        <textarea class="field-textarea" id="transkrip" placeholder='Hasil transkripsi muncul di sini, atau ketik manual. Contoh: "Saya Lukman leader line F04 ada masalah hasil cutting banyak rijek ibu jari size M 36 pcs oleh operator Ahmad"'></textarea>
+        <div id="status-bar" style="font-size:12px;color:#999;min-height:22px;margin-top:8px;display:flex;align-items:center;gap:6px"></div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn-secondary" style="margin-top:0" onclick="clearAll()">
+            <i class="ti ti-trash" style="font-size:15px"></i> Bersihkan
+          </button>
+          <button class="submit-btn" style="margin-top:0" onclick="parseWithAI()" id="btn-parse">
+            <i class="ti ti-robot" style="font-size:16px"></i> Parsing AI
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 3: PREVIEW -->
+    <div class="form-card" id="preview-card" style="display:none">
+      <div class="form-card-header">
+        <div class="card-step-dot"></div>
+        <span class="card-title-text">📋 Preview Data</span>
+      </div>
+      <div class="form-card-body">
+        <div id="preview-area"><div class="empty-state">Belum ada data.</div></div>
+      </div>
+    </div>
+
+    <!-- SUBMIT -->
+    <button class="submit-btn" id="btn-kirim" onclick="kirimKeSheet()" disabled>
+      <i class="ti ti-send" style="font-size:18px"></i>
+      Kirim ke Google Sheet
+    </button>
+
   </div>
 
-
-
-  <div class="card">
-    <div class="card-label">📋 Preview Data</div>
-    <div id="preview-area">
-      <div class="empty-preview">Belum ada data. Rekam dan parsing terlebih dahulu.</div>
-    </div>
-    <div class="btn-row" style="margin-top:12px">
-      <button class="btn btn-success" onclick="kirimKeSheet()" id="btn-kirim" disabled>📤 Kirim ke Google Sheet</button>
+  <!-- FOOTER -->
+  <div class="footer-zone">
+    <div class="live-row">
+      <div class="live-dot"></div>
+      <div class="live-txt">Sistem aktif — PT. ASI Production Division</div>
     </div>
   </div>
 
 </div>
 
+<!-- LOADING -->
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Memuat data...</div>
+</div>
+
+<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
+// ======= CONFIG =======
 const APIKEY_KEY = 'dip_apikey';
 const GASURL_KEY = 'dip_gasurl';
-const MASTER_SHEET_ID = '1PBEi36QhSFiXnu61XJAdwX-I34-0U3e9FZOd-Db0qlI';
-const MASTER_SHEET_NAME = 'MASTER LIST STYLE';
 
-let masterStyles = [];
-let masterSPOs = [];
-let parsedRows = [];
+let masterItems  = [];
+let selectedSPO  = '';
+let selectedStyle= '';
+let parsedRows   = [];
 let mediaRec = null, chunks = [], recInterval = null, recSecs = 0, isRec = false;
-let waveInterval = null;
-let recognition = null, liveText = '';
+let waveInterval = null, recognition = null, liveText = '';
+let filteredItems = [];
 
-window.onload = async () => {
+// ======= CLOCK =======
+function updateClock() {
+  const n = new Date();
+  document.getElementById('waktu').textContent =
+    n.getHours().toString().padStart(2,'0') + ':' + n.getMinutes().toString().padStart(2,'0');
+  const days   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  document.getElementById('tgl').textContent =
+    days[n.getDay()] + ', ' + n.getDate() + ' ' + months[n.getMonth()] + ' ' + n.getFullYear();
+}
+updateClock();
+setInterval(updateClock, 30000);
+
+function getTodayFormatted() {
+  const d = new Date();
+  return String(d.getDate()).padStart(2,'0') + '/' +
+         String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+}
+
+// ======= INIT =======
+window.addEventListener('DOMContentLoaded', async () => {
   const ak = localStorage.getItem(APIKEY_KEY);
   const gu = localStorage.getItem(GASURL_KEY);
   if (ak) document.getElementById('cfg-apikey').value = ak;
   if (gu) document.getElementById('cfg-gasurl').value = gu;
   document.getElementById('cfg-apikey').addEventListener('change', e => localStorage.setItem(APIKEY_KEY, e.target.value.trim()));
   document.getElementById('cfg-gasurl').addEventListener('change', e => localStorage.setItem(GASURL_KEY, e.target.value.trim()));
+
+  setupSPOInput();
   await loadMasterList();
-};
+});
+
+// ======= BANNER =======
+function setBanner(type, msg) {
+  const b = document.getElementById('status-banner');
+  b.className = 'status-banner';
+  if (!type) { b.style.display = 'none'; return; }
+  b.classList.add('show', type);
+  document.getElementById('banner-text').textContent = msg;
+}
 
 // ======= LOAD MASTER LIST =======
-let masterItems = []; // [{spo, style}]
-
 async function loadMasterList() {
-  const gasUrl = localStorage.getItem('dip_gasurl');
-  if (!gasUrl) { setStatus('⚠️ Isi Google Apps Script URL dulu.'); return; }
+  const gasUrl = localStorage.getItem(GASURL_KEY);
+  if (!gasUrl) { setBanner('info', 'Isi API Key & Script URL di Konfigurasi'); return; }
+  showLoading('Memuat master list...');
   try {
     const data = await new Promise((resolve, reject) => {
-      const callbackName = 'cb_' + Date.now();
+      const cbName = 'cb_' + Date.now();
       const script = document.createElement('script');
-      const timer = setTimeout(() => {
-        delete window[callbackName];
+      const timer  = setTimeout(() => {
+        delete window[cbName];
         if (script.parentNode) script.parentNode.removeChild(script);
         reject(new Error('Timeout'));
       }, 15000);
-      window[callbackName] = (d) => {
+      window[cbName] = (d) => {
         clearTimeout(timer);
-        delete window[callbackName];
+        delete window[cbName];
         if (script.parentNode) script.parentNode.removeChild(script);
         resolve(d);
       };
-      script.src = gasUrl + '?callback=' + callbackName + '&t=' + Date.now();
+      script.src = gasUrl + '?callback=' + cbName + '&t=' + Date.now();
       script.onerror = () => { clearTimeout(timer); reject(new Error('Load error')); };
       document.body.appendChild(script);
     });
     masterItems = data.items || [];
-    masterStyles = [...new Set(masterItems.map(i => i.style))];
-    masterSPOs   = [...new Set(masterItems.map(i => i.spo))];
-    setStatus(`✅ Master list: ${masterItems.length} pasang SPO-Style`);
-    // Auto focus dan tampilkan dropdown setelah master list loaded
-    const spoInput = document.getElementById('spo-search');
-    if (spoInput) {
-      spoInput.focus();
-      renderSPODropdown(spoInput.value);
-    }
+    hideLoading();
+    setBanner('done', `✓ Master list: ${masterItems.length} SPO-Style loaded`);
+    setTimeout(() => setBanner('', ''), 4000);
+    document.getElementById('spo-input').focus();
   } catch(e) {
-    setStatus('⚠️ Gagal load master list: ' + e.message);
+    hideLoading();
+    setBanner('failed', 'Gagal load master list: ' + e.message);
   }
 }
 
-// ======= WAVE ANIMATION =======
-const bars = document.querySelectorAll('.wave-bar');
-function animWave(on) {
-  clearInterval(waveInterval);
-  if (on) { waveInterval = setInterval(() => { bars.forEach(b => b.style.height = (4 + Math.random() * 28) + 'px'); }, 80); }
-  else { const h=[4,8,14,20,26,22,16,10,6,10,18,24,18,12,6]; bars.forEach((b,i) => b.style.height=(h[i]||6)+'px'); }
+// ======= SPO AUTOCOMPLETE =======
+function setupSPOInput() {
+  const input = document.getElementById('spo-input');
+  const drop  = document.getElementById('spo-dropdown');
+
+  input.addEventListener('input', () => renderSPODrop(input.value));
+  input.addEventListener('focus', () => renderSPODrop(input.value));
+  document.addEventListener('click', e => {
+    if (!input.contains(e.target) && !drop.contains(e.target)) drop.classList.remove('open');
+  });
+
+  drop.addEventListener('click', e => {
+    const item = e.target.closest('[data-idx]');
+    if (!item) return;
+    const idx = parseInt(item.getAttribute('data-idx'));
+    const d   = filteredItems[idx];
+    if (d) pilihSPO(d.spo, d.style);
+  });
 }
-function fmt2(n){return String(n).padStart(2,'0')}
-function fmtTime(s){return fmt2(Math.floor(s/60))+':'+fmt2(s%60)}
 
-// ======= SPO PICKER =======
-let selectedSPO = '';
-let selectedStyle = '';
+function renderSPODrop(query) {
+  const drop = document.getElementById('spo-dropdown');
+  if (!masterItems.length) return;
 
-// Simpan referensi items untuk onclick
-let filteredItems = [];
+  const q = query.toLowerCase().trim();
+  filteredItems = q
+    ? masterItems.filter(i => i.spo.toLowerCase().includes(q) || i.style.toLowerCase().includes(q))
+    : masterItems;
 
-function renderSPODropdown(query) {
-  const list = document.getElementById('spo-suggest-list');
-  if (!masterItems.length) { list.style.display = 'none'; return; }
+  const show = filteredItems.slice(0, 8);
 
-  let filtered = masterItems;
-  if (query.length > 0) {
-    filtered = masterItems.filter(i =>
-      i.spo.toLowerCase().includes(query.toLowerCase())
-    );
-  }
-
-  if (filtered.length === 0) {
-    list.innerHTML = '<div style="padding:10px 12px;font-size:13px;color:#aaa">Tidak ditemukan</div>';
-    list.style.display = 'block';
+  if (show.length === 0) {
+    drop.innerHTML = '<div class="ac-empty">SPO tidak ditemukan</div>';
+    drop.classList.add('open');
     return;
   }
 
-  filteredItems = filtered.slice(0, 8);
-  list.innerHTML = filteredItems.map((item, idx) => `
-    <div data-idx="${idx}"
-      style="padding:10px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid #F0F0EC;display:flex;justify-content:space-between;align-items:center"
-      onmouseover="this.style.background='#E0F2F1'" onmouseout="this.style.background=''">
-      <span style="font-weight:600">${item.spo}</span>
-      <span style="font-size:11px;color:#888;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.style}</span>
-    </div>`).join('');
-
-  // Pakai event delegation - lebih reliable dari onclick inline
-  list.onclick = (e) => {
-    const row = e.target.closest('[data-idx]');
-    if (!row) return;
-    const idx = parseInt(row.getAttribute('data-idx'));
-    const item = filteredItems[idx];
-    if (item) pilihSPO(item.spo, item.style);
-  };
-
-  list.style.display = 'block';
-}
-
-function onSPOSearch(val) {
-  renderSPODropdown(val);
-  if (!val) {
-    selectedSPO = ''; selectedStyle = '';
-    document.getElementById('spo-selected').style.display = 'none';
-  }
+  drop.innerHTML = show.map((item, idx) => {
+    const spoHL  = q ? item.spo.replace(new RegExp(`(${q})`, 'gi'), '<mark>$1</mark>') : item.spo;
+    return `<div class="ac-item" data-idx="${idx}">
+      <span class="ac-spo">${spoHL}</span>
+      <span class="ac-style">${item.style}</span>
+    </div>`;
+  }).join('');
+  drop.classList.add('open');
 }
 
 function pilihSPO(spo, style) {
-  selectedSPO = spo;
+  selectedSPO   = spo;
   selectedStyle = style;
-  document.getElementById('spo-search').value = spo;
-  document.getElementById('spo-suggest-list').style.display = 'none';
-  document.getElementById('spo-selected-val').textContent = spo;
-  document.getElementById('style-selected-val').textContent = style;
-  document.getElementById('spo-selected').style.display = 'block';
+  document.getElementById('spo-input').value = spo;
+  document.getElementById('spo-dropdown').classList.remove('open');
+  const st = document.getElementById('style-text');
+  st.textContent  = style;
+  st.style.color  = '#0A5C42';
+  st.style.fontStyle = 'normal';
+  document.getElementById('style-display').querySelector('i').className = 'ti ti-check';
+  document.getElementById('style-display').querySelector('i').style.color = '#1D9E75';
 }
+
+// ======= WAVE =======
+const bars = document.querySelectorAll('.wave-bar');
+function animWave(on) {
+  clearInterval(waveInterval);
+  if (on) { waveInterval = setInterval(() => bars.forEach(b => b.style.height = (4 + Math.random() * 24) + 'px'), 80); }
+  else { const h=[4,8,14,20,24,20,14,8,4,8,16,22,16,10,4]; bars.forEach((b,i) => b.style.height=(h[i]||6)+'px'); }
+}
+function fmt2(n){return String(n).padStart(2,'0')}
+function fmtTime(s){return fmt2(Math.floor(s/60))+':'+fmt2(s%60)}
 
 // ======= RECORD =======
 async function toggleRecord() {
@@ -342,10 +501,9 @@ async function toggleRecord() {
   }
 }
 
-// ======= SPEECH RECOGNITION =======
 function startLiveSpeech() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { setStatus('Ketik transkripsi manual atau gunakan mic keyboard.'); return; }
+  if (!SR) { setStatus('Gunakan mic keyboard untuk transkripsi.'); return; }
   recognition = new SR();
   recognition.lang = 'id-ID';
   recognition.continuous = true;
@@ -363,91 +521,31 @@ function startLiveSpeech() {
   recognition.start();
   setStatus('🔴 Merekam dan mentranskripsi…');
 }
+
 function stopLiveSpeech() {
   if (recognition) { try { recognition.stop(); } catch(e){} }
-  setStatus('Transkripsi selesai. Periksa teks, lalu tekan Parsing AI.');
-}
-
-// ======= SIMILARITY (fuzzy match) =======
-function similarityStyle(a, b) {
-  a = a.toLowerCase().trim();
-  b = b.toLowerCase().trim();
-  if (a === b) return 1;
-  if (b.includes(a) || a.includes(b)) return 0.9;
-  const wordsA = a.split(/[\s\-\/]+/).filter(w => w.length > 1);
-  const wordsB = b.split(/[\s\-\/]+/).filter(w => w.length > 1);
-  if (wordsA.length === 0) return 0;
-  let matches = wordsA.filter(w => wordsB.some(wb => wb.includes(w) || w.includes(wb))).length;
-  return matches / Math.max(wordsA.length, wordsB.length);
-}
-
-function similaritySPO(a, b) {
-  // Ekstrak angka sebelum "/" sebagai nomor utama
-  const numA = a.replace(/[^0-9\/]/g, '').trim();
-  const numB = b.replace(/[^0-9\/]/g, '').trim();
-  if (numA.length === 0 || numB.length === 0) return 0;
-
-  // Match sempurna
-  if (numA === numB) return 1;
-  if (numB.includes(numA) || numA.includes(numB)) return 0.95;
-
-  // Pisah nomor dan tahun
-  const partsA = numA.split('/');
-  const partsB = numB.split('/');
-  const noA = parseInt(partsA[0]) || 0;
-  const noB = parseInt(partsB[0]) || 0;
-  const yrA = partsA[1] || '';
-  const yrB = partsB[1] || '';
-
-  // Tahun sama - hitung kedekatan nomor secara numerik
-  if (yrA && yrB && yrA === yrB) {
-    const diff = Math.abs(noA - noB);
-    if (diff === 0) return 0.98;
-    if (diff <= 10) return 0.8 - (diff * 0.02);   // makin dekat makin tinggi
-    if (diff <= 50) return 0.5 - (diff * 0.005);
-    return 0.2;
-  }
-
-  // Nomor sama tapi tahun beda
-  if (noA === noB) return 0.6;
-
-  // Fallback: kedekatan numerik saja
-  const diff = Math.abs(noA - noB);
-  if (diff <= 10) return 0.3 - (diff * 0.01);
-  return 0;
-}
-
-function getTopMatches(query, list, topN = 4, type = 'style') {
-  if (!query || query === '-' || list.length === 0) {
-    return list.slice(0, topN).map(v => ({value: v, score: 0}));
-  }
-  const simFn = type === 'spo' ? similaritySPO : similarityStyle;
-  const scored = list.map(v => ({value: v, score: simFn(query, v)}));
-  scored.sort((a, b) => b.score - a.score);
-  const seen = new Set();
-  const unique = scored.filter(m => { if (seen.has(m.value)) return false; seen.add(m.value); return true; });
-  return unique.slice(0, topN);
+  setStatus('Transkripsi selesai. Periksa teks lalu tekan Parsing AI.');
 }
 
 // ======= AI PARSING =======
 async function parseWithAI() {
-  const apiKey = document.getElementById('cfg-apikey').value.trim();
+  const apiKey  = document.getElementById('cfg-apikey').value.trim();
   const transkrip = document.getElementById('transkrip').value.trim();
-  if (!apiKey) { showToast('Isi API Key dulu', 'error'); return; }
-  if (!transkrip) { showToast('Transkripsi kosong', 'error'); return; }
+  if (!apiKey)   { showToast('Isi API Key dulu di Konfigurasi', 'error'); return; }
+  if (!transkrip){ showToast('Transkripsi kosong', 'error'); return; }
+  if (!selectedSPO) { showToast('Pilih SPO terlebih dahulu', 'error'); return; }
 
   document.getElementById('btn-parse').disabled = true;
-  setStatus('<span class="dot-anim"><span></span><span></span><span></span></span> AI sedang menganalisis…', true);
+  showLoading('AI sedang menganalisis…');
 
-  const today = new Date().toLocaleDateString('id-ID', {day:'2-digit',month:'2-digit',year:'numeric'});
-
+  const today = getTodayFormatted();
   const prompt = `Kamu adalah sistem ekstraksi data untuk laporan produksi pabrik sepatu/garmen.
 
 Dari transkripsi audio berikut, ekstrak data dan kembalikan HANYA JSON array (tanpa penjelasan, tanpa markdown).
 
 PENTING: SPO dan Style sudah dipilih sebelumnya, gunakan nilai ini dan JANGAN ubah:
-- spo: "${selectedSPO || '-'}"
-- style: "${selectedStyle || '-'}"
+- spo: "${selectedSPO}"
+- style: "${selectedStyle}"
 
 Aturan:
 - Jika ada beberapa size, buat SATU objek per size
@@ -460,7 +558,7 @@ Aturan:
 - "divisi" adalah divisi/bagian produksi (contoh: cutting, sewing, finishing)
 
 Format JSON:
-[{"tanggal":"...","divisi":"...","pic":"...","style":"${selectedStyle || '-'}","issue":"...","size":"...","qty":"...","kategori":"...","operator":"...","spo":"${selectedSPO || '-'}"}]
+[{"tanggal":"...","divisi":"...","pic":"...","style":"${selectedStyle}","issue":"...","size":"...","qty":"...","kategori":"...","operator":"...","spo":"${selectedSPO}"}]
 
 Transkripsi:
 "${transkrip}"`;
@@ -480,15 +578,19 @@ Transkripsi:
     if (data.error) throw new Error(data.error.message);
     const clean = data.content[0].text.trim().replace(/```json|```/g,'').trim();
     parsedRows = JSON.parse(clean);
-
-    // Langsung render preview - SPO & Style sudah dipilih di awal
+    hideLoading();
     renderPreview(parsedRows);
+    document.getElementById('preview-card').style.display = 'block';
     document.getElementById('btn-kirim').disabled = false;
-    setStatus('✅ Parsing selesai! Periksa preview lalu kirim ke Sheet.');
+    setStatus('✅ Parsing selesai! Periksa preview lalu kirim.');
     showToast('Parsing berhasil!', 'success');
+    setBanner('done', '✓ Parsing selesai — ' + parsedRows.length + ' baris data');
+    document.getElementById('preview-card').scrollIntoView({behavior:'smooth'});
   } catch(e) {
+    hideLoading();
     setStatus('❌ Gagal parsing: ' + e.message);
     showToast('Gagal parsing AI', 'error');
+    setBanner('failed', 'Parsing gagal: ' + e.message);
   }
   document.getElementById('btn-parse').disabled = false;
 }
@@ -514,24 +616,34 @@ function renderPreview(rows) {
 // ======= KIRIM KE SHEET =======
 async function kirimKeSheet() {
   const gasUrl = document.getElementById('cfg-gasurl').value.trim();
-  if (!gasUrl) { showToast('Isi Script URL dulu', 'error'); return; }
+  if (!gasUrl)        { showToast('Isi Script URL dulu', 'error'); return; }
   if (!parsedRows.length) { showToast('Tidak ada data', 'error'); return; }
+
   document.getElementById('btn-kirim').disabled = true;
-  setStatus('<span class="dot-anim"><span></span><span></span><span></span></span> Mengirim ke Google Sheet…', true);
+  showLoading('Mengirim ke Google Sheet…');
+  setBanner('info', 'Mengirim ' + parsedRows.length + ' baris data...');
+
   try {
-    await fetch(gasUrl, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify({rows:parsedRows})});
-    setStatus('✅ Data berhasil dikirim ke Google Sheet!');
-    showToast('Berhasil masuk ke Sheet!', 'success');
+    await fetch(gasUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({rows: parsedRows})
+    });
+    hideLoading();
+    setBanner('done', '✓ ' + parsedRows.length + ' data berhasil terkirim!');
+    showToast('✓ Data berhasil masuk ke Sheet!', 'success');
     parsedRows = [];
-    setTimeout(() => clearAll(), 3000);
+    setTimeout(() => { clearAll(); setBanner('',''); }, 3000);
   } catch(e) {
-    setStatus('❌ Gagal kirim: ' + e.message);
+    hideLoading();
+    setBanner('failed', 'Gagal kirim: ' + e.message);
     showToast('Gagal kirim ke Sheet', 'error');
     document.getElementById('btn-kirim').disabled = false;
   }
 }
 
-// ======= UTILS =======
+// ======= CLEAR =======
 function clearAll() {
   document.getElementById('transkrip').value = '';
   document.getElementById('timer').textContent = '00:00';
@@ -540,28 +652,34 @@ function clearAll() {
   document.getElementById('rec-status').textContent = 'Tekan untuk mulai merekam';
   document.getElementById('audio-player').style.display = 'none';
   document.getElementById('audio-player').src = '';
-  document.getElementById('preview-area').innerHTML = '<div class="empty-preview">Belum ada data. Rekam dan parsing terlebih dahulu.</div>';
+  document.getElementById('preview-card').style.display = 'none';
+  document.getElementById('preview-area').innerHTML = '<div class="empty-state">Belum ada data.</div>';
   document.getElementById('btn-kirim').disabled = true;
-  // Reset SPO picker
-  document.getElementById('spo-search').value = '';
-  document.getElementById('spo-selected').style.display = 'none';
-  document.getElementById('spo-suggest-list').style.display = 'none';
-  selectedSPO = ''; selectedStyle = '';
+  document.getElementById('spo-input').value = '';
+  document.getElementById('spo-dropdown').classList.remove('open');
+  const st = document.getElementById('style-text');
+  st.textContent = 'Terisi otomatis saat SPO dipilih';
+  st.style.color = '#999'; st.style.fontStyle = 'italic';
+  document.getElementById('style-display').querySelector('i').className = 'ti ti-info-circle';
+  document.getElementById('style-display').querySelector('i').style.color = '#999';
   setStatus('');
   animWave(false);
   recSecs = 0; parsedRows = [];
+  selectedSPO = ''; selectedStyle = '';
 }
 
+// ======= UTILS =======
 function setStatus(msg, raw=false) {
   const el = document.getElementById('status-bar');
   if (raw) el.innerHTML = msg; else el.textContent = msg;
 }
-
+function showLoading(t) { document.getElementById('loading-text').textContent=t; document.getElementById('loading').classList.add('show'); }
+function hideLoading()  { document.getElementById('loading').classList.remove('show'); }
 function showToast(msg, type='') {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.className = 'toast show' + (type ? ' '+type : '');
-  setTimeout(() => t.className = 'toast', 2800);
+  setTimeout(() => t.classList.remove('show'), 3500);
 }
 </script>
 </body>
