@@ -149,27 +149,6 @@ audio{width:100%;margin-top:10px;border-radius:10px}
   .header-zone{padding-top:env(safe-area-inset-top,20px)}
   .footer-zone{padding-bottom:env(safe-area-inset-bottom,28px)}
 }
-
-/* PHOTO UPLOAD */
-.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
-.photo-slot{aspect-ratio:1;border-radius:12px;border:1.5px dashed #D0D0D0;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:#FAFAFA;overflow:hidden;position:relative;transition:border-color .15s}
-.photo-slot:hover{border-color:#1D9E75}
-.photo-slot.filled{border:none}
-.photo-slot img{width:100%;height:100%;object-fit:cover;border-radius:10px}
-.photo-slot .add-icon{font-size:24px;color:#CCC;margin-bottom:4px}
-.photo-slot .add-txt{font-size:10px;color:#BBB;text-align:center;letter-spacing:.3px}
-.photo-remove{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:white;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
-.photo-count{font-size:11px;color:#999;margin-top:6px;text-align:right}
-
-/* CONFIRM DIALOG */
-.confirm-overlay{display:none;position:fixed;inset:0;background:rgba(10,26,29,0.7);z-index:600;align-items:flex-end;justify-content:center}
-.confirm-overlay.show{display:flex}
-.confirm-sheet{background:white;border-radius:24px 24px 0 0;padding:24px 20px 36px;width:100%;max-width:420px}
-.confirm-sheet h3{font-size:16px;font-weight:700;color:#111;margin-bottom:8px;text-align:center}
-.confirm-sheet p{font-size:13px;color:#666;text-align:center;line-height:1.5;margin-bottom:20px}
-.confirm-btns{display:flex;gap:10px}
-.confirm-cancel{flex:1;padding:13px;border-radius:14px;border:1.5px solid #E5E7E6;background:white;color:#555;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit}
-.confirm-ok{flex:1;padding:13px;border-radius:14px;border:none;background:linear-gradient(135deg,#1D9E75,#378ADD);color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
 </style>
 </head>
 <body>
@@ -300,59 +279,6 @@ audio{width:100%;margin-top:10px;border-radius:10px}
       </div>
       <div class="form-card-body">
         <div id="preview-area"><div class="empty-state">Belum ada data.</div></div>
-      </div>
-    </div>
-
-    <!-- CARD 4: FOTO -->
-    <div class="form-card">
-      <div class="form-card-header">
-        <div class="card-step-dot"></div>
-        <span class="card-title-text">📷 Foto Pendukung</span>
-      </div>
-      <div class="form-card-body">
-        <div class="field-label" style="margin-bottom:10px"><i class="ti ti-camera"></i>Upload Foto (Maks. 3 foto)</div>
-        <div class="photo-grid">
-          <div class="photo-slot" id="slot-0" onclick="triggerPhoto(0)">
-            <div class="add-icon">＋</div>
-            <div class="add-txt">Foto 1</div>
-          </div>
-          <div class="photo-slot" id="slot-1" onclick="triggerPhoto(1)">
-            <div class="add-icon">＋</div>
-            <div class="add-txt">Foto 2</div>
-          </div>
-          <div class="photo-slot" id="slot-2" onclick="triggerPhoto(2)">
-            <div class="add-icon">＋</div>
-            <div class="add-txt">Foto 3</div>
-          </div>
-        </div>
-        <div class="photo-btn-row" id="photo-btn-row" style="display:none;gap:8px;margin-top:10px">
-          <button class="btn-secondary" style="margin-top:0;flex:1" onclick="triggerCamera()">
-            <i class="ti ti-camera" style="font-size:15px"></i> Kamera
-          </button>
-          <button class="btn-secondary" style="margin-top:0;flex:1" onclick="triggerGallery()">
-            <i class="ti ti-photo" style="font-size:15px"></i> Galeri
-          </button>
-          <button class="btn-secondary" style="margin-top:0;flex:none;padding:13px 14px" onclick="tutupSlotPicker()">
-            <i class="ti ti-x" style="font-size:15px"></i>
-          </button>
-        </div>
-        <div class="photo-count" id="photo-count">0 / 3 foto</div>
-        <!-- Input kamera -->
-        <input type="file" id="photo-camera" accept="image/*" capture="environment" style="display:none" onchange="onPhotoSelected(event)">
-        <!-- Input galeri -->
-        <input type="file" id="photo-gallery" accept="image/*" style="display:none" onchange="onPhotoSelected(event)">
-      </div>
-    </div>
-
-    <!-- CONFIRM DIALOG -->
-    <div class="confirm-overlay" id="confirm-overlay">
-      <div class="confirm-sheet">
-        <h3>⚠️ Tidak Ada Foto</h3>
-        <p>Tidak ada foto yang dilampirkan.<br>Lanjutkan kirim laporan tanpa foto?</p>
-        <div class="confirm-btns">
-          <button class="confirm-cancel" onclick="tutupKonfirmasi()">Batal</button>
-          <button class="confirm-ok" onclick="lanjutKirimTanpaFoto()">Ya, Kirim Tanpa Foto</button>
-        </div>
       </div>
     </div>
 
@@ -732,44 +658,19 @@ function renderPreview(rows) {
 // ======= KIRIM KE SHEET =======
 async function kirimKeSheet() {
   const gasUrl = document.getElementById('cfg-gasurl').value.trim();
-  if (!gasUrl)            { showToast('Isi Script URL dulu', 'error'); return; }
+  if (!gasUrl)        { showToast('Isi Script URL dulu', 'error'); return; }
   if (!parsedRows.length) { showToast('Tidak ada data', 'error'); return; }
 
-  // Cek foto
-  const adaFoto = photos.some(p => p !== null);
-  if (!adaFoto) {
-    document.getElementById('confirm-overlay').classList.add('show');
-    return;
-  }
-
-  // Ada foto — upload dulu
-  document.getElementById('btn-kirim').disabled = true;
-  try {
-    const fotoUrls = await uploadPhotosToGAS();
-    await eksekusiKirim(fotoUrls);
-  } catch(e) {
-    hideLoading();
-    setBanner('failed', e.message);
-    showToast('Gagal upload foto', 'error');
-    document.getElementById('btn-kirim').disabled = false;
-  }
-}
-
-async function eksekusiKirim(fotoUrls) {
-  const gasUrl = document.getElementById('cfg-gasurl').value.trim();
   document.getElementById('btn-kirim').disabled = true;
   showLoading('Mengirim ke Google Sheet…');
   setBanner('info', 'Mengirim ' + parsedRows.length + ' baris data...');
-
-  // Tambahkan foto URL ke semua rows
-  const rowsWithFoto = parsedRows.map(r => ({...r, foto: fotoUrls}));
 
   try {
     await fetch(gasUrl, {
       method: 'POST',
       mode: 'no-cors',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({rows: rowsWithFoto})
+      body: JSON.stringify({rows: parsedRows})
     });
     hideLoading();
     setBanner('done', '✓ ' + parsedRows.length + ' data berhasil terkirim!');
@@ -782,176 +683,6 @@ async function eksekusiKirim(fotoUrls) {
     showToast('Gagal kirim ke Sheet', 'error');
     document.getElementById('btn-kirim').disabled = false;
   }
-}
-
-// ======= PHOTO UPLOAD =======
-let photos = [null, null, null]; // {file, base64, preview}
-let activeSlot = 0;
-
-function triggerPhoto(slot) {
-  // Kalau slot sudah ada foto, abaikan klik
-  if (photos[slot] !== null) return;
-  activeSlot = slot;
-  // Tampilkan pilihan kamera/galeri
-  const btnRow = document.getElementById('photo-btn-row');
-  btnRow.style.display = 'flex';
-  // Highlight slot yang dipilih
-  [0,1,2].forEach(i => {
-    document.getElementById('slot-' + i).style.borderColor = i === slot ? '#1D9E75' : '';
-  });
-}
-
-function tutupSlotPicker() {
-  document.getElementById('photo-btn-row').style.display = 'none';
-  [0,1,2].forEach(i => document.getElementById('slot-' + i).style.borderColor = '');
-}
-
-function triggerCamera() {
-  const input = document.getElementById('photo-camera');
-  input.value = '';
-  input.click();
-}
-
-function triggerGallery() {
-  const input = document.getElementById('photo-gallery');
-  input.value = '';
-  input.click();
-}
-
-function onPhotoSelected(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  if (file.size > 10 * 1024 * 1024) { showToast('Ukuran foto maksimal 10MB', 'error'); return; }
-
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    const base64Full = ev.target.result;
-    const base64     = base64Full.split(',')[1];
-    const mimeType   = file.type;
-    photos[activeSlot] = { file, base64, mimeType, preview: base64Full };
-    renderPhotoSlot(activeSlot);
-    updatePhotoCount();
-    tutupSlotPicker(); // tutup pilihan kamera/galeri setelah foto dipilih
-  };
-  reader.readAsDataURL(file);
-}
-
-function renderPhotoSlot(idx) {
-  const slot = document.getElementById('slot-' + idx);
-  const p    = photos[idx];
-  if (p) {
-    slot.classList.add('filled');
-    slot.style.borderColor = '';
-    slot.innerHTML = `
-      <img src="${p.preview}" alt="foto ${idx+1}">
-      <button class="photo-remove" onclick="removePhoto(event,${idx})">✕</button>`;
-    slot.onclick = null;
-  } else {
-    slot.classList.remove('filled');
-    slot.style.borderColor = '';
-    slot.innerHTML = `<div class="add-icon">＋</div><div class="add-txt">Foto ${idx+1}</div>`;
-    slot.onclick = () => triggerPhoto(idx);
-  }
-}
-
-function removePhoto(e, idx) {
-  e.stopPropagation();
-  photos[idx] = null;
-  renderPhotoSlot(idx);
-  updatePhotoCount();
-  tutupSlotPicker();
-}
-
-function updatePhotoCount() {
-  const count = photos.filter(p => p !== null).length;
-  document.getElementById('photo-count').textContent = count + ' / 3 foto';
-}
-
-async function uploadPhotosToGAS() {
-  const gasUrl = document.getElementById('cfg-gasurl').value.trim();
-  const urls   = [];
-  const filled = photos.filter(p => p !== null);
-
-  for (let i = 0; i < filled.length; i++) {
-    const p = filled[i];
-    showLoading(`Mengupload foto ${i+1} dari ${filled.length}…`);
-    const ext      = p.mimeType.split('/')[1] || 'jpg';
-    const filename = `issue_${Date.now()}_${i+1}.${ext}`;
-
-    try {
-      // Gunakan iframe + form POST untuk bypass CORS
-      const url = await uploadViaIframe(gasUrl, {
-        type: 'uploadPhoto',
-        base64: p.base64,
-        mimeType: p.mimeType,
-        filename
-      });
-      urls.push(url);
-    } catch(e) {
-      throw new Error('Gagal upload foto ' + (i+1) + ': ' + e.message);
-    }
-  }
-  return urls.join(', ');
-}
-
-function uploadViaIframe(gasUrl, payload) {
-  return new Promise((resolve, reject) => {
-    const cbName = 'cbUpload_' + Date.now();
-    const timer  = setTimeout(() => {
-      cleanup();
-      reject(new Error('Timeout - coba lagi'));
-    }, 30000);
-
-    function cleanup() {
-      delete window[cbName];
-      const iframe = document.getElementById(cbName + '_frame');
-      const form   = document.getElementById(cbName + '_form');
-      if (iframe) iframe.remove();
-      if (form)   form.remove();
-    }
-
-    window[cbName] = (data) => {
-      clearTimeout(timer);
-      cleanup();
-      if (data && data.status === 'success') resolve(data.url);
-      else reject(new Error(data?.message || 'Upload gagal'));
-    };
-
-    // Buat iframe tersembunyi sebagai target form
-    const iframe = document.createElement('iframe');
-    iframe.id    = cbName + '_frame';
-    iframe.name  = cbName + '_frame';
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-
-    // Buat form tersembunyi
-    const form       = document.createElement('form');
-    form.id          = cbName + '_form';
-    form.method      = 'POST';
-    form.action      = gasUrl + '?callback=' + cbName;
-    form.target      = cbName + '_frame';
-    form.style.display = 'none';
-    form.enctype     = 'application/x-www-form-urlencoded';
-
-    // Masukkan payload sebagai hidden input
-    const input      = document.createElement('input');
-    input.type       = 'hidden';
-    input.name       = 'payload';
-    input.value      = JSON.stringify({...payload, callback: cbName});
-    form.appendChild(input);
-
-    document.body.appendChild(form);
-    form.submit();
-  });
-}
-
-function tutupKonfirmasi() {
-  document.getElementById('confirm-overlay').classList.remove('show');
-}
-
-async function lanjutKirimTanpaFoto() {
-  tutupKonfirmasi();
-  await eksekusiKirim('');
 }
 
 // ======= CLEAR =======
@@ -977,10 +708,6 @@ function clearAll() {
   animWave(false);
   recSecs = 0; parsedRows = [];
   selectedSPO = ''; selectedStyle = '';
-  // Reset foto
-  photos = [null, null, null];
-  [0,1,2].forEach(i => renderPhotoSlot(i));
-  updatePhotoCount();
 }
 
 // ======= UTILS =======
