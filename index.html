@@ -663,15 +663,39 @@ PENTING: SPO dan Style sudah dipilih sebelumnya, gunakan nilai ini dan JANGAN ub
 - spo: "${selectedSPO}"
 - style: "${selectedStyle}"
 
-Aturan:
+Aturan ekstraksi:
 - Jika ada beberapa size, buat SATU objek per size
 - Tanggal hari ini: ${today}
-- Kategori: tentukan sendiri berdasarkan isi issue (contoh: Material Defect, Sewing Defect, Cutting Error, Machine Down, Material Shortage, Quality Issue, dll)
 - Jika ada field yang tidak disebutkan, isi dengan "-"
 - qty harus angka saja (tanpa satuan)
 - "pic" adalah nama leader/supervisor yang melapor (biasanya disebut di awal kalimat)
 - "operator" adalah nama operator (biasanya setelah kata "oleh operator" atau "operator")
 - "divisi" adalah divisi/bagian produksi (contoh: cutting, sewing, finishing)
+
+KATEGORI — pilih SATU dari daftar berikut yang paling sesuai dengan isi issue:
+
+1. Material Defect
+   → Masalah kualitas material dari gudang/supplier. Contoh: material menguning, warna tidak sesuai standar, material cacat, logo tebal/tidak sesuai, penerimaan material tidak sesuai spesifikasi.
+
+2. Sewing Defect
+   → Masalah hasil jahitan. Contoh: jahitan loncat, jahitan tidak rapi, jahitan karet loncatan, jahitan tidak sesuai standar.
+
+3. Cutting Method Issue
+   → Masalah metode/cara cutting yang tidak tepat. Contoh: hasil cutting molor, gombor, tidak presisi akibat metode yang salah.
+
+4. Capacity Issue
+   → Masalah kapasitas produksi di bawah target/SMV. Contoh: kapasitas proses jahit pita masih rendah di bawah SMV, kekurangan tenaga operator untuk memenuhi target.
+
+5. Warehouse Escape
+   → Temuan material tidak sesuai standar yang lolos dari gudang. Contoh: temuan logo tebal, material di luar standar warna, penerimaan material tidak sesuai berupa potongan tidak standar.
+
+6. Cutting Defect
+   → Hasil cutting yang cacat/tidak sesuai. Contoh: hasil cutting tidak rata, lubang holepin tidak tembus, hasil cutting rijek.
+
+7. Consumption
+   → Masalah pemakaian/konsumsi material melebihi atau tidak sesuai standar. Contoh: kebutuhan material aktual melebihi standar per pcs/per 1000 pcs.
+
+Jika issue tidak cocok dengan kategori manapun, pilih yang paling mendekati.
 
 Format JSON:
 [{"tanggal":"...","divisi":"...","pic":"...","style":"${selectedStyle}","issue":"...","size":"...","qty":"...","kategori":"...","operator":"...","spo":"${selectedSPO}"}]
