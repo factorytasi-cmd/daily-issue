@@ -312,15 +312,15 @@ audio{width:100%;margin-top:10px;border-radius:10px}
       <div class="form-card-body">
         <div class="field-label" style="margin-bottom:10px"><i class="ti ti-camera"></i>Upload Foto (Maks. 3 foto)</div>
         <div class="photo-grid">
-          <div class="photo-slot" id="slot-0">
+          <div class="photo-slot" id="slot-0" onclick="triggerPhoto(0)">
             <div class="add-icon">＋</div>
             <div class="add-txt">Foto 1</div>
           </div>
-          <div class="photo-slot" id="slot-1">
+          <div class="photo-slot" id="slot-1" onclick="triggerPhoto(1)">
             <div class="add-icon">＋</div>
             <div class="add-txt">Foto 2</div>
           </div>
-          <div class="photo-slot" id="slot-2">
+          <div class="photo-slot" id="slot-2" onclick="triggerPhoto(2)">
             <div class="add-icon">＋</div>
             <div class="add-txt">Foto 3</div>
           </div>
@@ -878,19 +878,33 @@ async function uploadPhotosToGAS() {
     const ext = p.mimeType.split('/')[1] || 'jpg';
     const filename = `issue_${Date.now()}_${i+1}.${ext}`;
     try {
-      const res = await fetch(gasUrl, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          type: 'uploadPhoto',
-          base64: p.base64,
-          mimeType: p.mimeType,
-          filename
-        })
+      // Gunakan JSONP untuk upload foto supaya bisa baca response (hindari CORS)
+      const url = await new Promise((resolve, reject) => {
+        const cbName = 'cbPhoto_' + Date.now();
+        const timer  = setTimeout(() => {
+          delete window[cbName];
+          reject(new Error('Timeout upload foto'));
+        }, 30000);
+        window[cbName] = (d) => {
+          clearTimeout(timer);
+          delete window[cbName];
+          if (d.status === 'success') resolve(d.url);
+          else reject(new Error(d.message || 'Upload gagal'));
+        };
+        // Kirim via form POST dengan fetch biasa + callback di query param
+        fetch(gasUrl + '?callback=' + cbName, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            type: 'uploadPhoto',
+            base64: p.base64,
+            mimeType: p.mimeType,
+            filename,
+            callback: cbName
+          })
+        }).catch(e => { clearTimeout(timer); delete window[cbName]; reject(e); });
       });
-      const data = await res.json();
-      if (data.status === 'success') urls.push(data.url);
-      else throw new Error(data.message);
+      urls.push(url);
     } catch(e) {
       throw new Error('Gagal upload foto ' + (i+1) + ': ' + e.message);
     }
