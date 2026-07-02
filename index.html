@@ -312,21 +312,35 @@ audio{width:100%;margin-top:10px;border-radius:10px}
       <div class="form-card-body">
         <div class="field-label" style="margin-bottom:10px"><i class="ti ti-camera"></i>Upload Foto (Maks. 3 foto)</div>
         <div class="photo-grid">
-          <div class="photo-slot" id="slot-0" onclick="triggerPhoto(0)">
+          <div class="photo-slot" id="slot-0">
             <div class="add-icon">＋</div>
-            <div class="add-txt">Kamera / Galeri</div>
+            <div class="add-txt">Foto 1</div>
           </div>
-          <div class="photo-slot" id="slot-1" onclick="triggerPhoto(1)">
+          <div class="photo-slot" id="slot-1">
             <div class="add-icon">＋</div>
-            <div class="add-txt">Kamera / Galeri</div>
+            <div class="add-txt">Foto 2</div>
           </div>
-          <div class="photo-slot" id="slot-2" onclick="triggerPhoto(2)">
+          <div class="photo-slot" id="slot-2">
             <div class="add-icon">＋</div>
-            <div class="add-txt">Kamera / Galeri</div>
+            <div class="add-txt">Foto 3</div>
           </div>
         </div>
+        <div class="photo-btn-row" id="photo-btn-row" style="display:none;gap:8px;margin-top:10px">
+          <button class="btn-secondary" style="margin-top:0;flex:1" onclick="triggerCamera()">
+            <i class="ti ti-camera" style="font-size:15px"></i> Kamera
+          </button>
+          <button class="btn-secondary" style="margin-top:0;flex:1" onclick="triggerGallery()">
+            <i class="ti ti-photo" style="font-size:15px"></i> Galeri
+          </button>
+          <button class="btn-secondary" style="margin-top:0;flex:none;padding:13px 14px" onclick="tutupSlotPicker()">
+            <i class="ti ti-x" style="font-size:15px"></i>
+          </button>
+        </div>
         <div class="photo-count" id="photo-count">0 / 3 foto</div>
-        <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="onPhotoSelected(event)">
+        <!-- Input kamera -->
+        <input type="file" id="photo-camera" accept="image/*" capture="environment" style="display:none" onchange="onPhotoSelected(event)">
+        <!-- Input galeri -->
+        <input type="file" id="photo-gallery" accept="image/*" style="display:none" onchange="onPhotoSelected(event)">
       </div>
     </div>
 
@@ -775,8 +789,31 @@ let photos = [null, null, null]; // {file, base64, preview}
 let activeSlot = 0;
 
 function triggerPhoto(slot) {
+  // Kalau slot sudah ada foto, abaikan klik
+  if (photos[slot] !== null) return;
   activeSlot = slot;
-  const input = document.getElementById('photo-input');
+  // Tampilkan pilihan kamera/galeri
+  const btnRow = document.getElementById('photo-btn-row');
+  btnRow.style.display = 'flex';
+  // Highlight slot yang dipilih
+  [0,1,2].forEach(i => {
+    document.getElementById('slot-' + i).style.borderColor = i === slot ? '#1D9E75' : '';
+  });
+}
+
+function tutupSlotPicker() {
+  document.getElementById('photo-btn-row').style.display = 'none';
+  [0,1,2].forEach(i => document.getElementById('slot-' + i).style.borderColor = '');
+}
+
+function triggerCamera() {
+  const input = document.getElementById('photo-camera');
+  input.value = '';
+  input.click();
+}
+
+function triggerGallery() {
+  const input = document.getElementById('photo-gallery');
   input.value = '';
   input.click();
 }
@@ -788,12 +825,13 @@ function onPhotoSelected(e) {
 
   const reader = new FileReader();
   reader.onload = (ev) => {
-    const base64Full = ev.target.result; // data:image/jpeg;base64,XXX
+    const base64Full = ev.target.result;
     const base64     = base64Full.split(',')[1];
     const mimeType   = file.type;
     photos[activeSlot] = { file, base64, mimeType, preview: base64Full };
     renderPhotoSlot(activeSlot);
     updatePhotoCount();
+    tutupSlotPicker(); // tutup pilihan kamera/galeri setelah foto dipilih
   };
   reader.readAsDataURL(file);
 }
@@ -803,12 +841,15 @@ function renderPhotoSlot(idx) {
   const p    = photos[idx];
   if (p) {
     slot.classList.add('filled');
+    slot.style.borderColor = '';
     slot.innerHTML = `
       <img src="${p.preview}" alt="foto ${idx+1}">
       <button class="photo-remove" onclick="removePhoto(event,${idx})">✕</button>`;
+    slot.onclick = null;
   } else {
     slot.classList.remove('filled');
-    slot.innerHTML = `<div class="add-icon">＋</div><div class="add-txt">Kamera / Galeri</div>`;
+    slot.style.borderColor = '';
+    slot.innerHTML = `<div class="add-icon">＋</div><div class="add-txt">Foto ${idx+1}</div>`;
     slot.onclick = () => triggerPhoto(idx);
   }
 }
@@ -818,6 +859,7 @@ function removePhoto(e, idx) {
   photos[idx] = null;
   renderPhotoSlot(idx);
   updatePhotoCount();
+  tutupSlotPicker();
 }
 
 function updatePhotoCount() {
