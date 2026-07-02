@@ -745,8 +745,8 @@ async function kirimKeSheet() {
   // Ada foto — upload dulu
   document.getElementById('btn-kirim').disabled = true;
   try {
-    const fotoUrls = await uploadPhotosToGAS();
-    await eksekusiKirim(fotoUrls);
+    const fotoObj = await uploadPhotosToGAS();
+    await eksekusiKirim(fotoObj);
   } catch(e) {
     hideLoading();
     setBanner('failed', e.message);
@@ -761,8 +761,13 @@ async function eksekusiKirim(fotoUrls) {
   showLoading('Mengirim ke Google Sheet…');
   setBanner('info', 'Mengirim ' + parsedRows.length + ' baris data...');
 
-  // Tambahkan foto URL ke semua rows
-  const rowsWithFoto = parsedRows.map(r => ({...r, foto: fotoUrls}));
+  // Tambahkan foto URL ke semua rows (3 kolom terpisah)
+  const rowsWithFoto = parsedRows.map(r => ({
+    ...r,
+    foto1: fotoUrls.foto1 || '',
+    foto2: fotoUrls.foto2 || '',
+    foto3: fotoUrls.foto3 || ''
+  }));
 
   try {
     await fetch(gasUrl, {
@@ -885,7 +890,12 @@ async function uploadPhotosToGAS() {
       throw new Error('Gagal upload foto ' + (i+1) + ': ' + e.message);
     }
   }
-  return urls.join(', ');
+  // Return sebagai object foto1, foto2, foto3
+  return {
+    foto1: urls[0] || '',
+    foto2: urls[1] || '',
+    foto3: urls[2] || ''
+  };
 }
 
 async function uploadToCloudinary(photo) {
@@ -911,7 +921,7 @@ function tutupKonfirmasi() {
 
 async function lanjutKirimTanpaFoto() {
   tutupKonfirmasi();
-  await eksekusiKirim('');
+  await eksekusiKirim({foto1:'', foto2:'', foto3:''});
 }
 
 // ======= CLEAR =======
